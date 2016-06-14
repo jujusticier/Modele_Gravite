@@ -18,38 +18,42 @@ Ville_europe <- filter(Ville_europe, rank <=5)
 #pour generer les couples de villes
 x <- list()
 for(i in Ville_europe$name){
-  x[[i]]<- data.frame(rep(i, times= nrow(Ville_europe)),Ville_europe$name)
+  x[[i]]<- data.frame(rep(i, times= nrow(Ville_europe)),Ville_europe$name,Ville_europe$country.etc)
   message("...ecrit la ligne", i)
 }
 TableVille_Europe <- rbindlist(x)
-rm(x,i)
+
+#pour cleaner on supprime les objets inutiles
+rm(x,i,Eu)
+
+#on renomme et supprime les variables inutiles
+TableVille_Europe$From <- TableVille_Europe$rep.i..times...nrow.Ville_europe..
+TableVille_Europe$To <- TableVille_Europe$Ville_europe.name
+TableVille_Europe$rep.i..times...nrow.Ville_europe..<- NULL
+TableVille_Europe$Ville_europe.name <- NULL
+
+#on ajoute les pays pour les origines / destinations
+ x <- data.frame(Ville_europe$country.etc,Ville_europe$name, stringsAsFactors = FALSE)
+ TableVille_Europe <- merge(x=TableVille_Europe,y=x,by.x = "From",by.y = "Ville_europe.name",all=FALSE,suffixes = c(".to",".from"),stringsAsFactors = FALSE)
+ 
+ #on clean la table finale
+TableVille_Europe$Country.To <- as.character(TableVille_Europe$Ville_europe.country.etc.to )
+TableVille_Europe$Country.from <- as.character(TableVille_Europe$Ville_europe.country.etc.from )
+TableVille_Europe$Ville_europe.country.etc.from <- NULL
+TableVille_Europe$Ville_europe.country.etc.to <-NULL
+TableVille_Europe$To <- as.character(TableVille_Europe$To)
 
 
-################################################ A FAIRE ###############################
-# renommer les colonnes
-rename
-#ajouter les pays des sources et destinations
-merge
-merge
+##### Utilisation de l'API Google######
+# les donnees sont déja en bon format
 
-
-
-
-
-# transformer les noms des villes en character les quali
-TableVille_Europe$rep.i..times...229. <- as.character(TableVille_Europe$rep.i..times...229.)
-TableVille_Europe$cities.City <- as.character(TableVille$cities.City )
-
-
-#pour la distance entre les villes il va surement falloir utiliser OSRM
 x <-list()
-for(i in 1:nrow(TableVille_Europe){
-from<- c(TableVille$rep.i..times...229.[i:i])
-to <- c(TableVille$cities.City[i:i])
+for(i in 1:25499{
+from<- c(TableVille_Europe$From[i])
+to <- c(TableVille_Europe$to[i])
 x[[i]]<-mapdist(from,to,output = c("simple"),mode = c("driving"))
 message("Traite la ligne",i)
 }
-
 Tabledistance <- rbindlist(x)
 distQueryCheck()
 
