@@ -1,0 +1,57 @@
+# Script donnees geo : il fonctionne sans aucune donnees a ajouter
+# libraries nécessaires : installer si necessaire
+library(data.table)
+library(ggmap)
+library(dplyr)
+library(maps)
+#source les nom des villes (anglais)
+Ville_monde <- data.table(world.cities)
+# filtre les pays européens 
+Eu <- rbind("Belgium","Bulgaria","Czech Republic","Denmark","Germany","Estonia","Hungary","Greece","Spain","France","Croatia","Italy","Cyprus","Latvia","Lithuania","Luxembourg","Malta","Netherlands","Austria","Poland","Portugal","Romania","Slovenia","Slovakia","Finland","Sweden","UK","Norway")
+Eu<-data.frame(Eu) 
+Ville_europe <- merge(x= Ville_monde, y=Eu, by.x="country.etc",by.y="Eu", all= FALSE)
+
+#donne un rang et garde les 5 premières (pour capter les petits pays)
+Ville_europe$rank <- ave(-Ville_europe$pop, Ville_europe$country.etc,FUN=rank)
+Ville_europe <- filter(Ville_europe, rank <=5)
+
+#pour generer les couples de villes
+x <- list()
+for(i in Ville_europe$name){
+  x[[i]]<- data.frame(rep(i, times= nrow(Ville_europe)),Ville_europe$name)
+  message("...ecrit la ligne", i)
+}
+TableVille_Europe <- rbindlist(x)
+rm(x,i)
+
+
+################################################ A FAIRE ###############################
+# renommer les colonnes
+rename
+#ajouter les pays des sources et destinations
+merge
+merge
+
+
+
+
+
+# transformer les noms des villes en character les quali
+TableVille_Europe$rep.i..times...229. <- as.character(TableVille_Europe$rep.i..times...229.)
+TableVille_Europe$cities.City <- as.character(TableVille$cities.City )
+
+
+#pour la distance entre les villes il va surement falloir utiliser OSRM
+x <-list()
+for(i in 1:nrow(TableVille_Europe){
+from<- c(TableVille$rep.i..times...229.[i:i])
+to <- c(TableVille$cities.City[i:i])
+x[[i]]<-mapdist(from,to,output = c("simple"),mode = c("driving"))
+message("Traite la ligne",i)
+}
+
+Tabledistance <- rbindlist(x)
+distQueryCheck()
+
+
+#ensuite il faudra merger les villes par pays (fois 2) puis agregate par couple ij
