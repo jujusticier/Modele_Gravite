@@ -61,4 +61,6 @@ distQueryCheck()
 ############################### A FAIRE ##################################
 #d'abord associer les villes à leurs pays
 #puis écrire le csv
+write.csv(Table_complete, file = "C:/Users/jarthur/Desktop/GoogleDist1.csv")
+
 #ensuite il faudra moyenner par couple de pays et sortir avec une table de couple pays distance
