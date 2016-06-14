@@ -57,5 +57,8 @@ message("Traite la ligne",i)
 Tabledistance <- rbindlist(x, fill=TRUE)
 distQueryCheck()
 
-### plus qu'à écrire le csv
-#ensuite il faudra merger les villes par pays (fois 2) puis agregate par couple ij
+
+############################### A FAIRE ##################################
+#d'abord associer les villes à leurs pays
+#puis écrire le csv
+#ensuite il faudra moyenner par couple de pays et sortir avec une table de couple pays distance
