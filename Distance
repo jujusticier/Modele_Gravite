@@ -48,7 +48,7 @@ TableVille_Europe$To <- as.character(TableVille_Europe$To)
 # les donnees sont déja en bon format
 
 x <-list()
-for(i in 1:100){
+for(i in 1:2499){
 from<- c(TableVille_Europe$From[i])
 to <- c(TableVille_Europe$To[i])
 x[[i]]<-mapdist(from,to,output = c("simple"),mode = c("driving"), messaging= FALSE)
@@ -57,5 +57,5 @@ message("Traite la ligne",i)
 Tabledistance <- rbindlist(x, fill=TRUE)
 distQueryCheck()
 
-
+### plus qu'à écrire le csv
 #ensuite il faudra merger les villes par pays (fois 2) puis agregate par couple ij
