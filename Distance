@@ -61,3 +61,4 @@ write.csv(Tabledistance,file=paste0(getwd(),"/Dist1.csv"))
 
 #on nettoie l'espace de travail
 #ensuite il faudra moyenner par couple de pays et sortir avec une table de couple pays distance
+#AhGCyLgs4kFp3JlLL2koinDWMHdQI1xNRLTVDGatqoxBFkqN8CuJ0S_5UeYo7Ur8
