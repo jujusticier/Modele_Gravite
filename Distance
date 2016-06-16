@@ -1,5 +1,3 @@
-# Script donnees geo : il fonctionne sans aucune donnees a ajouter
-# libraries nécessaires : installer si necessaire
 library(data.table)
 library(ggmap)
 library(dplyr)
@@ -18,7 +16,7 @@ Ville_europe <- filter(Ville_europe, rank <=5)
 #pour generer les couples de villes
 x <- list()
 for(i in Ville_europe$name){
-  x[[i]]<- data.frame(rep(i, times= nrow(Ville_europe)),Ville_europe$name,Ville_europe$country.etc)
+  x[[i]]<- data.frame(rep(i, times= nrow(Ville_europe)),Ville_europe$name)
   message("...ecrit la ligne", i)
 }
 TableVille_Europe <- rbindlist(x)
@@ -27,40 +25,38 @@ TableVille_Europe <- rbindlist(x)
 rm(x,i,Eu)
 
 #on renomme et supprime les variables inutiles
-TableVille_Europe$From <- TableVille_Europe$rep.i..times...nrow.Ville_europe..
-TableVille_Europe$To <- TableVille_Europe$Ville_europe.name
-TableVille_Europe$rep.i..times...nrow.Ville_europe..<- NULL
-TableVille_Europe$Ville_europe.name <- NULL
+TableVille_Europe <- rename(TableVille_Europe, From = rep.i..times...nrow.Ville_europe.., To = Ville_europe.name)
+TableVille_Europe$To <- as.character(TableVille_Europe$To)
+TableVille_Europe$From <- as.character(TableVille_Europe$From)
+
 
 #on ajoute les pays pour les origines / destinations
- x <- data.frame(Ville_europe$country.etc,Ville_europe$name, stringsAsFactors = FALSE)
- TableVille_Europe <- merge(x=TableVille_Europe,y=x,by.x = "From",by.y = "Ville_europe.name",all=FALSE,suffixes = c(".to",".from"),stringsAsFactors = FALSE)
- 
- #on clean la table finale
-TableVille_Europe$Country.To <- as.character(TableVille_Europe$Ville_europe.country.etc.to )
-TableVille_Europe$Country.from <- as.character(TableVille_Europe$Ville_europe.country.etc.from )
-TableVille_Europe$Ville_europe.country.etc.from <- NULL
-TableVille_Europe$Ville_europe.country.etc.to <-NULL
-TableVille_Europe$To <- as.character(TableVille_Europe$To)
-
+Table_Ville.Pays <- data.frame(Ville_europe$country.etc,Ville_europe$name, stringsAsFactors = FALSE)
+rm(Ville_europe,Ville_monde)
 
 ##### Utilisation de l'API Google######
 # les donnees sont déja en bon format
 
 x <-list()
-for(i in 1:2499){
-from<- c(TableVille_Europe$From[i])
-to <- c(TableVille_Europe$To[i])
-x[[i]]<-mapdist(from,to,output = c("simple"),mode = c("driving"), messaging= FALSE)
-message("Traite la ligne",i)
+for(i in 1:20){
+  from<- c(TableVille_Europe$From[i])
+  to <- c(TableVille_Europe$To[i])
+  x[[i]]<-mapdist(from,to,output = c("simple"),mode = c("driving"), messaging= FALSE)
+  message("Traite la ligne",i)
 }
 Tabledistance <- rbindlist(x, fill=TRUE)
 distQueryCheck()
 
+Tabledistance <- merge(x=Tabledistance,y=Table_Ville.Pays, by.x="to",by.y="Ville_europe.name",all = FALSE)
+Tabledistance <- rename(Tabledistance, Country.to = Ville_europe.country.etc)
+Tabledistance <- merge(x=Tabledistance,y=Table_Ville.Pays, by.x="from",by.y="Ville_europe.name",all = FALSE)
+Tabledistance <- rename(Tabledistance, Country.from = Ville_europe.country.etc)
 
-############################### A FAIRE ##################################
-#d'abord associer les villes à leurs pays
-#puis écrire le csv
-write.csv(Table_complete, file = "C:/Users/jarthur/Desktop/GoogleDist1.csv")
+write.csv(Tabledistance,file=paste0(getwd(),"/Dist1.csv"))
 
+
+
+####boucle pour lire les csv#####
+
+#on nettoie l'espace de travail
 #ensuite il faudra moyenner par couple de pays et sortir avec une table de couple pays distance
