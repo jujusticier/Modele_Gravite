@@ -457,6 +457,9 @@ library(data.table)
 library(ggmap)
 library(dplyr)
 library(maps)
+library(foreach)
+#il y a clairement moyen d'optimiser ce code avec https://cran.r-project.org/web/packages/foreach/vignettes/foreach.pdf
+
 #source les nom des villes (anglais)
 Ville_monde <- data.table(world.cities)
 # filtre les pays européens 
