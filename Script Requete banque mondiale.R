@@ -66,4 +66,13 @@ tabledistance <- rbindlist(x)
 distQueryCheck()
 
 
+######################### avec Here
+
+https://route.cit.api.here.com/routing/7.2/calculateroute.json
+?app_id={YOUR_APP_ID}
+&app_code={YOUR_APP_CODE}
+&waypoint0=geo!52.5,13.4
+&waypoint1=geo!52.5,13.45
+&mode=fastest;car;traffic:disabled
+
 #ensuite il faudra merger les villes par pays (fois 2) puis agregate par couple ij
