@@ -68,11 +68,6 @@ distQueryCheck()
 
 ######################### avec Here
 
-https://route.cit.api.here.com/routing/7.2/calculateroute.json
-?app_id={67H1R05V3iVWlRzWlJxU}
-&app_code={5aHPGX4f1rR8TwYWQOsi6g}
-&waypoint0=geo!52.5,13.4
-&waypoint1=geo!52.5,13.45
-&mode=fastest;car;traffic:disabled
+https://route.cit.api.here.com/routing/7.2/calculateroute.json?waypoint0=52.5129%2C13.4037&waypoint1=52.5206%2C13.3862&mode=fastest%3Bcar%3Btraffic%3Aenabled&app_id=DemoAppId01082013GAL&app_code=AJKnXv84fjrb0KIHawS0Tg&departure=now
 
 #ensuite il faudra merger les villes par pays (fois 2) puis agregate par couple ij
