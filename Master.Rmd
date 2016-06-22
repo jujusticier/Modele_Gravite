@@ -12,10 +12,12 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 # TO DO LIST
-Harmoniser et finaliser la liste de variable à intégrer dans les modèles
-Ajouter indicatrice EU et Schengen
-Mettre à jour la base de donnes
-verifier les unités des variables
+- Harmoniser et finaliser la liste de variable à intégrer dans les modèles
+- Ajouter indicatrice EU et Schengen
+- Finir de mettre à jour la base de donnes
+- verifier les unités des variables
+
+
 # Introduction
 Ce document de travail a pour objet de présenter l'avancement des recherches du bureau Macro 3 quant à la mise à jour d'un modèle de gravité des échanges internationaux. Il est rédigé de façon à permettre la reproductibilité complète des analyses[^1].
 [^1]: Vous trouverez l'ensemble des données au format csv
@@ -239,10 +241,11 @@ gc()
 
 
 ```{r, tidy=TRUE}
-#Créer une une variable couple de pays/annees dans les deux bases (CPA)
+#Créer une une variable couple de pays/annees dans les deux bases (CPA) et une variable couple pays
 Donnees_Commerce$CPA <- paste(Donnees_Commerce$i, Donnees_Commerce$j,Donnees_Commerce$year)
 Donnees_Gravite$CPA <- paste(Donnees_Gravite$i, Donnees_Gravite$j,Donnees_Gravite$year)
 Donnees_Gravite$ij <- paste(Donnees_Gravite$i,Donnees_Gravite$j)
+
 #Pour obtenir des données par couple pays annee on peut agréger les donnes dans la base Chelem 
 Table_Chelem <- aggregate(Donnees_Commerce$v, by= list(Donnees_Commerce$CPA),FUN = sum)
 #### ici il serait bon de vérifier les totaux
@@ -250,8 +253,6 @@ Table_Chelem <- aggregate(Donnees_Commerce$v, by= list(Donnees_Commerce$CPA),FUN
 #Créons et renomons certaines variables pour faciliter les merge
 Table_Chelem <- rename(Table_Chelem, CPA = Group.1)
 Table_Chelem <- rename(Table_Chelem, v = x)
-### il faut utiliser stringr ici pour supprimer annee
-####peut etre inutile #### Table_Chelem$ij <- substr(Table_Chelem$CPA, 1, 7)
 
 ```
 
@@ -544,11 +545,15 @@ write.csv(x=Datacomplete, file="F:/POP.csv")
 
 # Bibliographie
 Head, K. and T. Mayer, (2013), "Gravity Equations: Toolkit, Cookbook, Workhorse."  Handbook of International Economics, Vol. 4,eds. Gopinath, Helpman, and Rogoff, Elsevier.
+
 Sevestre P. (2002), « Econométrie des données de panel », Dunod
+
 Baier S. et Bergstrang J. (2002), « On the endogeneity of international trade flows and free trade agreements », Manuscript
+
 Baier S. et Bergstrang J. (2005), « Do free trade agreements actually increase Members’ international trade? », Manuscript
+
 Da Silva J.S. et Tenreyro S. (2006), « The log of Gravity », The review of Economics and Statistics
+
 Feenstra, R. (2003), « Advanced international trade: Theory and Evidence », Princeton, NJ: Princeton University Press
+
 Fontagné L., Mayer T. et Zignago S. (2005), « A re-evaluation of the impact of regional trade agreements on trade », Draft Version, CEPII
-
-
