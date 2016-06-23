@@ -25,11 +25,4 @@ write.csv(x=Datacomplete, file="F:/POP.csv")
 
 
 
-#il reste encore ?? automatiser la liste des URLapi ?? faire boucler sur la base des donnees Profils Pays
-
-################################################################
-
-#Script Eurostat
-library(eurostat)
-library(dplyr)
-test <- get_eurostat("fats_out2_r2", Filters=list(geo="FR"))
+#il reste encore à automatiser la liste des URLapi ?? faire boucler sur la base des donnees Profils Pays
