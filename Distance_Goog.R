@@ -1,3 +1,5 @@
+#Contient le code d'une boucle qui permet de trouver la distance des couples des 5 plus grandes villes des pays européens par l'API de google. La limite étant qu'on ne peut lancer que 2500 couples par jour. 
+#Voir Distance_OSRM.R pour la suite.
 library(data.table)
 library(ggmap)
 library(dplyr)
