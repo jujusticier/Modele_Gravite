@@ -16,6 +16,7 @@ knitr::opts_chunk$set(echo = TRUE)
 - Ajouter indicatrice EU et Schengen
 - Finir de mettre à jour la base de donnes
 - verifier les unités des variables
+- TROUVER pourquoi certains pays disparaissent en 2006
 
 
 # Introduction
@@ -81,12 +82,9 @@ La variable de distance est classiquement une distance géodésique c'est à dir
 
 #### 3.1.3.2 Distance routière - Dans le cas de l'Union Européenne
 
-Pour compléter on peut se rapprocher d'une définition logistique des échanges, en utilisant la distance routiére. Nous avons récupérer les 5 plus grandes villes des 28 pays européens, puis réalisé une moyenne simple des distances entre ces villes. 
+Pour compléter on peut se rapprocher d'une définition logistique des échanges, en utilisant la distance routiére. Nous avons récupérer les 5 plus grandes villes des 28 pays européens, puis réalisé une moyenne simple des distances entre ces villes. Cette variante a pour objectif de raffiner la variable de distance pour les pays européens où 70% à 75% des échanges commerciaux sont transportés par la route.
 
-Cette variante a pour objectif de raffiner la variable de distance pour les pays européens où 70% à 75% des échanges commerciaux sont transportés par la route.
-
-Dans les prochaines versions il s'agirait de prendre en compte les principaux centres logistiques et non les grandes villes.
-Cet indicateur pourrait etre transposé au niveau mondial en pondérant par pays la distance par mode de transport. 
+Dans les prochaines versions il s'agira de prendre en compte les principaux centres logistiques et non les grandes villes. De plus, cet indicateur pourrait etre transposé au niveau mondial en pondérant par pays la distance par mode de transport. 
 
 Ci dessous la réparatition des échanges dans l'UE par mode de transport
 
@@ -109,6 +107,8 @@ Graph_Transport  <- ggplot(MTeurope, aes(y=INDICATOR_VALUE, x=PERIOD_LAB, fill=T
 ggplotly(Graph_Transport)
 ```
 
+#### 3.1.3.2 Distance logistique 
+On peut raffiner la distance entre les pays
 
 #### 3.1.3.3 Pondération de la distance : Remoteness 
 Il faut introduire une variable de distance relative (Deardoff 1998, Baldwin et Taglioni 2006) sur le modelé de Wei 1996, on appellera cette variable REMOT pour remotness (typiquement l'australie et la Nouvelle-Zélande commerce plus en entre eux car sont isolés). On choisit cette option car elle semble compatible é la fois avec les distances routiéres et les distance géodésiques: 
@@ -233,6 +233,10 @@ Donnees_Gravite$comlang_off <- NULL
 Donnees_Gravite$comlang_ethno<- NULL
 Donnees_Gravite$acp_to_eu<- NULL
 Donnees_Gravite$eu_to_acp <- NULL
+
+######## Pour l'instant impossible d'utiliser GATT
+Donnees_Gravite$gatt_o <- NULL
+Donnees_Gravite$gatt_d <- NULL
 ```
 
 ```{r include=FALSE, warning=FALSE}
@@ -247,12 +251,13 @@ Donnees_Gravite$CPA <- paste(Donnees_Gravite$i, Donnees_Gravite$j,Donnees_Gravit
 Donnees_Gravite$ij <- paste(Donnees_Gravite$i,Donnees_Gravite$j)
 
 #Pour obtenir des données par couple pays annee on peut agréger les donnes dans la base Chelem 
-Table_Chelem <- aggregate(Donnees_Commerce$v, by= list(Donnees_Commerce$CPA),FUN = sum)
+Table_Chelem <- filter(select(Donnees_Commerce, 5,7,8), k == "TT")
 #### ici il serait bon de vérifier les totaux
 
 #Créons et renomons certaines variables pour faciliter les merge
-Table_Chelem <- rename(Table_Chelem, CPA = Group.1)
-Table_Chelem <- rename(Table_Chelem, v = x)
+#Table_Chelem <- rename(Table_Chelem, CPA = Group.1)
+#Table_Chelem <- rename(Table_Chelem, v = x)
+Table_Chelem$k <-NULL
 
 ```
 
@@ -282,8 +287,8 @@ MAJ <- data.frame(rep(as.character(PIB07$i), each=9), rep(as.character(PIB07$i),
 MAJ$iy <- paste(MAJ$rep.as.character.PIB07.i...each...9.,MAJ$rep.PIB07.year..times...9.)
 
 #on fusionne avec dplyr
-MAJ<- left_join(MAJ,select(PIB07,4,8),by="iy")
-MAJ<- left_join(MAJ,select(POP07,4,8),by="iy")
+MAJ<- merge(MAJ,select(PIB07,4,8),by="iy",all.x = TRUE)
+MAJ<- merge(MAJ,select(POP07,4,8),by="iy", all.x=TRUE)
 
 #on renomme pour faciliter la fusion 
 MAJ<- rename(MAJ,i = rep.as.character.PIB07.i...each...9., j = rep.as.character.PIB07.i...times...9., year = rep.PIB07.year..times...9., gdp_o = Datacomplete.value.x, gdp_d = rep.PIB07.Datacomplete.value..times...9., pop_o = Datacomplete.value.y, pop_d = rep.POP07.Datacomplete.value..times...9.)
@@ -304,29 +309,27 @@ Donnees_Gravite06 <- filter(Donnees_Gravite, year == 2006)
 #créons les variables manquantes ################A FAIRE#################
 MAJ$gdpcap_o <- MAJ$gdp_o/MAJ$pop_o
 MAJ$gdpcap_d <- MAJ$gdp_d/MAJ$pop_d
-MAJ$distw ###merge par couple pays
-MAJ$contig ###merge par couple pays
-MAJ$gatt_o ## merge par pays 
-MAJ$gatt_d## merge par pays 
-MAJ$rta #### merge par couple pays mais bloqué en 2006 [extrapolation]
-MAJ$comleg #### merge par couple pays
-MAJ$comcur ### merge par couple pays
-MAJ$commlang #### merge par couple pays
+MAJ <- merge(MAJ,select(Donnees_Gravite06,4,5,12,13,14,15,17), by="ij", all.x = TRUE)###merge par couple pays
 
+
+```
+
+```{r}
 
 #supprimons les données PIB et POP
-rm(PIB07,POP07)
+#rm(PIB07,POP07,Donnees_Gravite06)
 ```
 
 
 Finalement créer la table avec les donnees de gravite et de commerce
 
 ```{r , tidy=TRUE}
-Table_Gravite <- #append donnees grav et MAJ
-Table_Gravite <- merge(x=Donnees_Gravite,y=Table_Chelem, by= c("CPA") ,all= FALSE)
+Donnees_Gravite$CPA <- paste(Donnees_Gravite$i, Donnees_Gravite$j,Donnees_Gravite$year)
+Table_Gravite <- bind_rows(Donnees_Gravite,MAJ)
+Table_Gravite <- merge(x=Table_Gravite,y=Table_Chelem, by= c("CPA") ,all= FALSE)
 ```
 
-On peut donc supprimer les autres données inutiles afin de libérer de la mémoire avant de faire tourner les modéles
+On peut donc supprimer les autres données inutiles afin de libérer de la mémoire avant de faire tourner les modèles
 
 ```{r warning=FALSE, tidy=TRUE}
 rm(Donnees_Gravite,Donnees_Commerce,Table_Chelem)
@@ -457,9 +460,6 @@ library(data.table)
 library(ggmap)
 library(dplyr)
 library(maps)
-library(foreach)
-#il y a clairement moyen d'optimiser ce code avec https://cran.r-project.org/web/packages/foreach/vignettes/foreach.pdf
-
 #source les nom des villes (anglais)
 Ville_monde <- data.table(world.cities)
 # filtre les pays européens 
