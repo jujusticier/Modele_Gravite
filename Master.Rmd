@@ -19,7 +19,7 @@ knitr::opts_chunk$set(echo = TRUE)
 - TROUVER pourquoi certains pays disparaissent en 2006
 
 
-# Introduction
+# Introduction 
 Ce document de travail a pour objet de présenter l'avancement des recherches du bureau Macro 3 quant à la mise à jour d'un modèle de gravité des échanges internationaux. Il est rédigé de façon à permettre la reproductibilité complète des analyses
 
 Le modèle doit permettre de: 
