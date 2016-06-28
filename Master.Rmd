@@ -20,8 +20,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 # Introduction
-Ce document de travail a pour objet de présenter l'avancement des recherches du bureau Macro 3 quant à la mise à jour d'un modèle de gravité des échanges internationaux. Il est rédigé de façon à permettre la reproductibilité complète des analyses[^1].
-[^1]: Vous trouverez l'ensemble des données au format csv
+Ce document de travail a pour objet de présenter l'avancement des recherches du bureau Macro 3 quant à la mise à jour d'un modèle de gravité des échanges internationaux. Il est rédigé de façon à permettre la reproductibilité complète des analyses
 
 Le modèle doit permettre de: 
 - Travailler sur des potentiels de commerce 
@@ -29,17 +28,29 @@ Le modèle doit permettre de:
 - Autres utilisations ? 
 
 Nous construirons deux modèles : 
-1. Modèle mondial : avec des données couvrant la periode 1967-2014 et une spécification classique.Dans un souci de simplicité nous estimerons ce modèle avec des données pré-traitées issues du travail du CEPII (base Gravity et Chelem).  
+1. Modèle mondial : avec des données couvrant la periode 1967-2014 et une spécification classique.Dans un souci de simplicité nous estimerons ce modèle avec des données pré-traitées issues du travail du CEPII (base Gravity et Chelem).
+
 2. Modèle européen: avec des données couvrant la période 1967-2014, une variable de distance routière et une spécification adaptée à l'UE.
 
 
 
 # 1. Revue de littérature 
-Développée dans sa forme la plus simple par Tinbergen (1962) et Linnemann (1966), uneéquation de gravitéfait dépendre les flux de é bilatéraux (somme des exportations et des importations X)  de forces d'attraction et de résistance. 
-Deardoff reprend l'hypothèse d'Armington sur la différenciation des produits selon leur provenance
+D'abord développée, dans sa forme la plus simple par Tinbergen (1962) et Linnemann (1966), l'équation de gravité fait dépendre les flux bilatéraux de commerce de forces d'attraction et de résistance.Sa robustesse (reconnue par la littérature (Mayer 2001)) en fait un outil privilégié de l'analyse des échanges internationaux de biens et de services (Kimura et Lee 2006).
+
+Il existe deux branches pour la spécification des modèles de gravité : 
+- Les modèles intuitifs ou naifs
+- Les modèles théoriquement fondés (Anderson et Wincoop 2003)
+
+## 1.1. Le modèle de gravité intuitif
+## 1.2. Les modèles de gravité théoriques
+
+Deardoff (??) reprend l'hypothèse d'Armington sur la différenciation des produits selon leur provenance
 le produit des revenus (Y) des deux partenaires i et j divisés par la distance 
 
 (1) $$ X_{ij} = \alpha \frac{Y^{\beta_{1}}_{i} Y^{\beta_{2}}_{i}}{D^{\beta_{3}}_{ij}}$$
+
+
+
 
 Avec $\alpha, \beta_1, \beta_2 et \beta_3$ comme paramètres à estimer. L’équation sous une forme log-linéraire afin d’interpréter les coefficients comme des élasticités de flux de commerce (2)
 
@@ -49,7 +60,8 @@ $$ Ln(X_ijt )=α+β_1 〖lna(PIB〗_it)+β_2 lna(〖PIB〗_jt)+β_3 lna(〖PIBca
 
 (2)
 
-La robustesse de l'équation est reconnue par la littérature (Mayer 2001) et demeure le principal outil utilisé pour l'analyse deséchanges internationaux de biens. .
+
+On oppose l'approche naive de l'équation gravité à son approche fondée théoriquement.
 
 # 2. Source des données et description des variables
 ###	2.1. Echanges bilatéraux
@@ -166,7 +178,7 @@ Dans un premier temps nous traiterons les données gravite du CEPII et commerce 
 
 
 ```{r results="hide", warning=FALSE,message=FALSE, tidy=TRUE}
-#on charge les bons packages et on augmente la mémoire disponible
+##on charge les bons packages et on augmente la mémoire disponible
 library(data.table)
 library(dplyr)
 library(plm)
@@ -175,27 +187,30 @@ memory.limit(20000)
 ```
 
 ```{r, message=FALSE, warning=FALSE, tidy=TRUE}
-#on charge les donnees trade directement en data.table
+##on charge les donnees trade directement en data.table
 Donnees_Commerce<- fread(input=paste0(getwd(),"/Chelem.csv"),data.table= TRUE, verbose = FALSE, stringsAsFactors = TRUE )
 
-#Renomer la variable t pour la transformer en year
+##Renomer la variable t pour la transformer en year
 Donnees_Commerce <- rename(Donnees_Commerce, year=t)
+
+## on réduit la base donnees commerce avec uniquement les totaux
+Donnees_Commerce <- filter(Donnees_Commerce, k == "TT")
 ```
 
 
 ```{r,message=FALSE, warning=FALSE, tidy=TRUE}
-#on charge les donnees gravité directement en data.table
+##on charge les donnees gravité directement en data.table
 Donnees_Gravite <- fread(input=paste0(getwd(),"/gravdata_cepii.csv"),data.table= TRUE,verbose = FALSE)
 
-# Reduit les donnees de gravité é 1967, car nous n'avons pas de données commerce avant cette date
+## Reduit les donnees de gravité é 1967, car nous n'avons pas de données commerce avant cette date
 Donnees_Gravite <- filter(Donnees_Gravite, year > 1966)
 
-#renomer les variables origine et destination 
+##renomer les variables origine et destination 
 Donnees_Gravite <- rename(Donnees_Gravite, i = iso3_o)
 Donnees_Gravite <- rename(Donnees_Gravite, j=iso3_d)
 
 
-#on passe les indicatrices en facteur
+##on passe les indicatrices en facteur
 Donnees_Gravite$rta <- ifelse(is.na(Donnees_Gravite$rta),"0", Donnees_Gravite$rta)
 Donnees_Gravite$rta <- as.factor(Donnees_Gravite$rta)
 Donnees_Gravite$contig <- as.factor(Donnees_Gravite$contig)
@@ -209,7 +224,7 @@ Donnees_Gravite$commlang <- ifelse((Donnees_Gravite$comlang_off|Donnees_Gravite$
 Donnees_Gravite$commlang <- as.factor(Donnees_Gravite$commlang)
 
 
-#On peut d'ore et déjà alléger la base
+##On peut d'ore et déjà alléger la base
 Donnees_Gravite$indepdate <- NULL
 Donnees_Gravite$leg_o <- NULL
 Donnees_Gravite$leg_d <- NULL
@@ -234,7 +249,7 @@ Donnees_Gravite$comlang_ethno<- NULL
 Donnees_Gravite$acp_to_eu<- NULL
 Donnees_Gravite$eu_to_acp <- NULL
 
-######## Pour l'instant impossible d'utiliser GATT
+## Pour l'instant impossible d'utiliser GATT
 Donnees_Gravite$gatt_o <- NULL
 Donnees_Gravite$gatt_d <- NULL
 ```
@@ -245,19 +260,12 @@ gc()
 
 
 ```{r, tidy=TRUE}
-#Créer une une variable couple de pays/annees dans les deux bases (CPA) et une variable couple pays
+##Créer une une variable couple de pays/annees dans les deux bases (CPA) et une variable couple pays
 Donnees_Commerce$CPA <- paste(Donnees_Commerce$i, Donnees_Commerce$j,Donnees_Commerce$year)
 Donnees_Gravite$CPA <- paste(Donnees_Gravite$i, Donnees_Gravite$j,Donnees_Gravite$year)
 Donnees_Gravite$ij <- paste(Donnees_Gravite$i,Donnees_Gravite$j)
+Donnees_Commerce$ij<- paste(Donnees_Commerce$i,Donnees_Commerce$j)
 
-#Pour obtenir des données par couple pays annee on peut agréger les donnes dans la base Chelem 
-Table_Chelem <- filter(select(Donnees_Commerce, 5,7,8), k == "TT")
-#### ici il serait bon de vérifier les totaux
-
-#Créons et renomons certaines variables pour faciliter les merge
-#Table_Chelem <- rename(Table_Chelem, CPA = Group.1)
-#Table_Chelem <- rename(Table_Chelem, v = x)
-Table_Chelem$k <-NULL
 
 ```
 
@@ -280,70 +288,74 @@ POP07$iy <- paste(POP07$i,POP07$year)
 
 ######################## il va falloir construire la meme base et rbind à la fin
 
-#on crée la base de données
-MAJ <- data.frame(rep(as.character(PIB07$i), each=9), rep(as.character(PIB07$i),times=9),rep(PIB07$year,times=9), rep(PIB07$Datacomplete.value, times=9), rep(POP07$Datacomplete.value, times=9))
+##on crée la base de données
+MAJ <- data.frame(rep(as.character(PIB07$i), each=9*211), rep(as.character(PIB07$i),times=9*211),rep(PIB07$year,times=9*211), rep(PIB07$Datacomplete.value, times=9*211),rep(PIB07$Datacomplete.value, times=9*211), rep(POP07$Datacomplete.value, times=9*211))
 
-#on crée une colonne commune on aurait pu renommer ici aussi
-MAJ$iy <- paste(MAJ$rep.as.character.PIB07.i...each...9.,MAJ$rep.PIB07.year..times...9.)
+##on crée une colonne commune on aurait pu renommer ici aussi
+MAJ$iy <- paste(MAJ$rep.as.character.PIB07.i...each...9...211.,MAJ$rep.PIB07.year..times...9...211.)
 
-#on fusionne avec dplyr
+##on fusionne avec dplyr
 MAJ<- merge(MAJ,select(PIB07,4,8),by="iy",all.x = TRUE)
 MAJ<- merge(MAJ,select(POP07,4,8),by="iy", all.x=TRUE)
 
-#on renomme pour faciliter la fusion 
-MAJ<- rename(MAJ,i = rep.as.character.PIB07.i...each...9., j = rep.as.character.PIB07.i...times...9., year = rep.PIB07.year..times...9., gdp_o = Datacomplete.value.x, gdp_d = rep.PIB07.Datacomplete.value..times...9., pop_o = Datacomplete.value.y, pop_d = rep.POP07.Datacomplete.value..times...9.)
+##on renomme pour faciliter la fusion 
+MAJ<- rename(MAJ,i = rep.as.character.PIB07.i...each...9...211., j = rep.as.character.PIB07.i...times...9...211., year = rep.PIB07.year..times...9...211., gdp_o = Datacomplete.value.x, gdp_d = rep.PIB07.Datacomplete.value..times...9...211., pop_o = Datacomplete.value.y, pop_d = rep.POP07.Datacomplete.value..times...9...211.)
 
-#creons colonne commune pour fusion et supprimons les colonnes inutiles
+##creons colonne commune pour fusion et supprimons les colonnes inutiles
 MAJ$ij <- paste(MAJ$i, MAJ$j)
 MAJ$CPA <- paste(MAJ$i,MAJ$j,MAJ$year)
 MAJ$iy <- NULL
 MAJ$jy <- NULL
 
-#supprimons les annees inutiles
+##supprimons les annees inutiles
 MAJ<- filter(MAJ, year <2015)
 
-# il faudra utiliser un subset sur 2006 pour limiter les risques de doublons à partir de donnees grav
+## il faudra utiliser un subset sur 2006 pour limiter les risques de doublons à partir de donnees grav
 
 Donnees_Gravite06 <- filter(Donnees_Gravite, year == 2006)
 
-#créons les variables manquantes ################A FAIRE#################
+##créons les variables manquantes
 MAJ$gdpcap_o <- MAJ$gdp_o/MAJ$pop_o
 MAJ$gdpcap_d <- MAJ$gdp_d/MAJ$pop_d
 MAJ <- merge(MAJ,select(Donnees_Gravite06,4,5,12,13,14,15,17), by="ij", all.x = TRUE)###merge par couple pays
 
-
+##### On supprime les doublons
+MAJ <- distinct(MAJ)
 ```
 
 ```{r}
 
 #supprimons les données PIB et POP
-#rm(PIB07,POP07,Donnees_Gravite06)
+rm(PIB07,POP07,Donnees_Gravite06)
 ```
 
 
 Finalement créer la table avec les donnees de gravite et de commerce
 
 ```{r , tidy=TRUE}
-Donnees_Gravite$CPA <- paste(Donnees_Gravite$i, Donnees_Gravite$j,Donnees_Gravite$year)
+#Donnees_Gravite$CPA <- paste(Donnees_Gravite$i, Donnees_Gravite$j,Donnees_Gravite$year)
 Table_Gravite <- bind_rows(Donnees_Gravite,MAJ)
-Table_Gravite <- merge(x=Table_Gravite,y=Table_Chelem, by= c("CPA") ,all= FALSE)
+Table_Gravite <- merge(x=Table_Gravite,y=select(Donnees_Commerce,7,8), by= c("CPA") ,all= FALSE)
 ```
 
 On peut donc supprimer les autres données inutiles afin de libérer de la mémoire avant de faire tourner les modèles
 
 ```{r warning=FALSE, tidy=TRUE}
-rm(Donnees_Gravite,Donnees_Commerce,Table_Chelem)
-Table_Gravite$CPA <- NULL
+rm(Donnees_Gravite,Donnees_Commerce,MAJ, Donnees_Gravite06)
+
 ```
 
 ```{r, tidy=TRUE }
-#on en profite pour ajouter une colonne couple de pays pour l'effet fixe
-Table_Gravite$ij <- paste(Table_Gravite$i,Table_Gravite$j)
+#On peut prendre les données sur 20 ans
 Table_Gravite96_06 <- filter(Table_Gravite, year > 1995)
 ```
 
 ```{r include=FALSE}
 gc()
+```
+
+```{r}
+head(Table_Gravite)
 ```
 
 
@@ -403,6 +415,20 @@ Sur 20 ans
 ```{r results="asis", echo=FALSE, tidy=TRUE}
 stargazer(RegPanelTime96bis, RegPanelCountry96, RegPanel_pool96 ,RegMCO96, RegPoiss96bis,column.labels = c("Panel Temps","Panel Pays","Panel Pooled", "MCO", "QuasiPoissontemps") ,type = "html")
 ```
+
+### Pour obtenir des standards erreurs robustes
+```{r}
+#utile pour l'estimation de poisson
+library("lmtest") 
+library("sandwich") 
+
+coeftest(RegPoiss, vcov = sandwich)
+```
+
+ 
+
+
+
 
 ### Premières prévisions sur modèle monde et potentiel de commerce
 
@@ -547,6 +573,9 @@ write.csv(x=Datacomplete, file="F:/POP.csv")
 
 
 # Bibliographie
+
+Didier, Head (2008)
+
 Head, K. and T. Mayer, (2013), "Gravity Equations: Toolkit, Cookbook, Workhorse."  Handbook of International Economics, Vol. 4,eds. Gopinath, Helpman, and Rogoff, Elsevier.
 
 Sevestre P. (2002), « Econométrie des données de panel », Dunod
