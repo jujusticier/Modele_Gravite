@@ -16,10 +16,10 @@ knitr::opts_chunk$set(echo = TRUE)
 - Ajouter indicatrice EU et Schengen
 - Finir de mettre à jour la base de donnes
 - verifier les unités des variables
-- TROUVER pourquoi certains pays disparaissent en 2006
+- Verifier distance à partir de 2006
 
 
-# Introduction 
+# Introduction
 Ce document de travail a pour objet de présenter l'avancement des recherches du bureau Macro 3 quant à la mise à jour d'un modèle de gravité des échanges internationaux. Il est rédigé de façon à permettre la reproductibilité complète des analyses
 
 Le modèle doit permettre de: 
@@ -293,6 +293,11 @@ MAJ <- data.frame(rep(as.character(PIB07$i), each=9*211), rep(as.character(PIB07
 
 ##on crée une colonne commune on aurait pu renommer ici aussi
 MAJ$iy <- paste(MAJ$rep.as.character.PIB07.i...each...9...211.,MAJ$rep.PIB07.year..times...9...211.)
+
+#mettons les données à la meme unité
+PIB07[,4]<- PIB07[,4]/(10^6)
+POP07[,4]<- POP07[,4]/(10^6)
+
 
 ##on fusionne avec dplyr
 MAJ<- merge(MAJ,select(PIB07,4,8),by="iy",all.x = TRUE)
