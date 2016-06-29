@@ -11,12 +11,12 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-# TO DO LIST
+#  TO DO LIST
 - Harmoniser et finaliser la liste de variable à intégrer dans les modèles
 - Ajouter indicatrice EU et Schengen
 - Finir de mettre à jour la base de donnes
 - verifier les unités des variables
-- faire dummy EU
+- Voir colonne 18 bizarre
 
 
 # Introduction
@@ -343,6 +343,20 @@ Table_Gravite <- bind_rows(Donnees_Gravite,MAJ)
 Table_Gravite <- merge(x=Table_Gravite,y=select(Donnees_Commerce,7,8), by= c("CPA") ,all= FALSE)
 ```
 
+Création de la dummy EU
+```{r}
+#il va falloir faire ce type de code 
+Table_Gravite$EUi<- ifelse(Table_Gravite$year>1957 & (Table_Gravite$i == "FRA"|Table_Gravite$i == "DEU"|Table_Gravite$i == "BEL"|Table_Gravite$i == "ITA"|Table_Gravite$i =="LUX"|Table_Gravite$i =="NLD")|Table_Gravite$year>1995 &(Table_Gravite$i=="AUT"|Table_Gravite$i =="FIN"|Table_Gravite$i =="SWE")|Table_Gravite$year>2007&(Table_Gravite$i=="BGR"|Table_Gravite$i=="ROU")|Table_Gravite$year>2004&(Table_Gravite$i=="CYP"|Table_Gravite$i=="EST"|Table_Gravite$i=="HUN"|Table_Gravite$i=="LVA"|Table_Gravite$i=="LTU"|Table_Gravite$i=="MLT"|Table_Gravite$i=="POL"|Table_Gravite$i=="CZE"|Table_Gravite$i=="SVK"|Table_Gravite$i=="SVN")|Table_Gravite$year>2013&(Table_Gravite$i=="HRV")|Table_Gravite$year>1986&(Table_Gravite$i=="ESP"|Table_Gravite$i=="PRT")|Table_Gravite$year>1981&(Table_Gravite$i=="GRC")|Table_Gravite$year>1973&(Table_Gravite$i=="GBR"|Table_Gravite$i=="IRL"|Table_Gravite$i=="DNK"),1,0)
+
+Table_Gravite$EUj<- ifelse(Table_Gravite$year>1957 & (Table_Gravite$j == "FRA"|Table_Gravite$j == "DEU"|Table_Gravite$j == "BEL"|Table_Gravite$j == "ITA"|Table_Gravite$j =="LUX"|Table_Gravite$j =="NLD")|Table_Gravite$year>1995 &(Table_Gravite$j=="AUT"|Table_Gravite$j =="FIN"|Table_Gravite$j =="SWE")|Table_Gravite$year>2007&(Table_Gravite$j=="BGR"|Table_Gravite$j=="ROU")|Table_Gravite$year>2004&(Table_Gravite$j=="CYP"|Table_Gravite$j=="EST"|Table_Gravite$j=="HUN"|Table_Gravite$j=="LVA"|Table_Gravite$j=="LTU"|Table_Gravite$j=="MLT"|Table_Gravite$j=="POL"|Table_Gravite$j=="CZE"|Table_Gravite$j=="SVK"|Table_Gravite$j=="SVN")|Table_Gravite$year>2013&(Table_Gravite$j=="HRV")|Table_Gravite$year>1986&(Table_Gravite$j=="ESP"|Table_Gravite$j=="PRT")|Table_Gravite$year>1981&(Table_Gravite$j=="GRC")|Table_Gravite$year>1973&(Table_Gravite$j=="GBR"|Table_Gravite$j=="IRL"|Table_Gravite$j=="DNK"),1,0)
+
+Table_Gravite$EU<- ifelse(Table_Gravite$EUi == 1 & Table_Gravite$EUj==1,1,0)
+Table_Gravite$EU<- as.factor(Table_Gravite$EU)
+Table_Gravite$EUi<- NULL
+Table_Gravite$EUj<-NULL
+```
+
+
 On peut donc supprimer les autres données inutiles afin de libérer de la mémoire avant de faire tourner les modèles
 
 ```{r warning=FALSE, tidy=TRUE}
@@ -362,6 +376,7 @@ gc()
 ```{r}
 head(Table_Gravite)
 ```
+
 
 
 
