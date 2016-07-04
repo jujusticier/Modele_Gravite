@@ -11,7 +11,7 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-#  TO DO LIST
+# TO DO LIST
 - Harmoniser et finaliser la liste de variable à intégrer dans les modèles
 - Ajouter indicatrice EU et Schengen
 - Finir de mettre à jour la base de donnes
@@ -47,14 +47,14 @@ Il existe deux branches pour la spécification des modèles de gravité :
 Deardoff (??) reprend l'hypothèse d'Armington sur la différenciation des produits selon leur provenance
 le produit des revenus (Y) des deux partenaires i et j divisés par la distance 
 
-(1) `$$` X_{ij} = \alpha \frac{Y^{\beta_{1}}_{i} Y^{\beta_{2}}_{i}}{D^{\beta_{3}}_{ij}}`$$`
+(1) $$ X_{ij} = \alpha \frac{Y^{\beta_{1}}_{i} Y^{\beta_{2}}_{i}}{D^{\beta_{3}}_{ij}}$$
 
 
 
 
 Avec $\alpha, \beta_1, \beta_2 et \beta_3$ comme paramètres à estimer. L’équation sous une forme log-linéraire afin d’interpréter les coefficients comme des élasticités de flux de commerce (2)
 
-$$ Ln(X_ijt )=α+β_1 〖lna(PIB〗_it)+β_2 lna(〖PIB〗_jt)+β_3 lna(〖PIBcap〗_it)+β_4 lna(〖PIBcap〗_jt)+β_5 lna(〖Dist〗_ij)〖+β〗_6 〖Front〗_ij+β_7 〖Lang〗_ij+β_8 〖ALE〗_ijt+ε_ijt$$
+$$ \ln(X_{ijt})= \alpha + \beta_1\ln(PIB_{it})+\beta_2\ln(PIB_{jt})+\beta_3\ln(POP_{it})+\beta_4\ln(POP_{jt}) +\beta_5\ln(DIST_ij)+\beta_6 Front_ij+ \beta_7LANGCOMM_ij+ \beta_8 ALE_ijt+ ε_ijt$$
 
 (McCallum (1995), Anderson Wincoop (2006))
 
@@ -343,6 +343,19 @@ Table_Gravite <- bind_rows(Donnees_Gravite,MAJ)
 Table_Gravite <- merge(x=Table_Gravite,y=select(Donnees_Commerce,7,8), by= c("CPA") ,all= FALSE)
 ```
 
+Mise à jour avec les données Fouquin, Hugo 
+1. Données de tarifs douanier
+2. Taux de change
+3. Distance maritime
+
+```{r}
+ Donnees_long<- haven::read_dta(path = paste0(getwd(),"/TRADHIST_WP.dta"))
+Donnees_long$CPA <- paste(Donnees_long$iso_o,Donnees_long$iso_d, Donnees_long$year)
+
+Table_Gravite <- merge(Table_Gravite,select(Donnees_long,61,27), by="CPA",all.x = TRUE)
+```
+
+
 Création de la dummy EU
 ```{r}
 #il va falloir faire ce type de code 
@@ -379,13 +392,12 @@ head(Table_Gravite)
 
 
 
-
 #Modéles de regression
 ## Sur l'ensemble des donnéees 
 La régression sur l'ensemble des données permet de voir si le modéle général fonctionne 
 ```{r tidy=TRUE}
 #MCO classique
-RegMCO <- lm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(pop_o)+log(pop_d)+contig+comcur+commlang+gatt_o+gatt_d+rta, data= Table_Gravite , na.action = na.omit)
+RegMCO <- lm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(pop_o)+log(pop_d)+contig+comcur+commlang+rta, data= Table_Gravite , na.action = na.omit)
 
 #Equation de gravite en panel
 RegPanelTime <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d+rta, data=Table_Gravite, index= c("ij","year"), model = c("within"), effect=c("time"), na.action= na.omit)
@@ -396,7 +408,7 @@ RegPanelCountry <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+l
 RegPanel_pool <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d+rta, data=Table_Gravite, index= c("ij","year"), model = c("pooling"),na.action= na.omit)
 
 #glm poisson
-RegPoiss <- glm(v ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d+rta, data=Table_Gravite, na.action = na.omit, family = quasipoisson(link="log"))
+RegPoiss <- glm(v ~ log(gdp_o)+log(gdp_d)+log(distw)+log(pop_o)+log(pop_d)+contig+comcur+commlang+EU+factor(CPA)-1, data=Table_Gravite, na.action = na.omit, family = quasipoisson(link="log"), y=FALSE,model = FALSE)
 ```
 
 Idem sur 20 ans 
@@ -463,6 +475,7 @@ RegPoissFRA <- glm(v ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap
 
 #creer une nouvelle table pour les prédictions pour la France en MCO
 Table_Prev <- filter(Table_Gravite, i== "FRA")
+## il y a surement plus simple à faire
 Table_Prev <- cbind(predict.glm(RegPoissFRA, newdata=Table_Prev) ,Table_Prev)
 Table_Prev$fit <- exp(Table_Prev$V1)
 Table_Prev$n<-1:3308
@@ -478,6 +491,12 @@ ComparaisonFrance
 
 ### Potentiels de commerce
 
+En prenant les estimations des modèles ci-dessus, on obtient le flux théorique de commerce entre i et j en t. Ce flux théorique peut-être interprêté naïvement comme le potentiel d'échanges entre deux économies compte tenu des forces d'attraction et de résistance contenues dans le modèle. Fontagné (2000) fournit la méthodologie suivante pour ajuster les potentiels de commerce afin de prendre en compte le niveau des exportations actuelles. L'ajustement consiste à prendre la moyenne de flux simulés et des flux simulés ajustés (5)
+
+(5) $$ X^*_{ij} = \frac{\sum_{j} X_{ij}-X_{ij}}{\sum_j \hat{X}_{ij}-\hat{X}_{ij}}$$
+(6) $$ X^*_{i}= \sum_{j}X^*_{ij}$$
+
+Dans ces conditions, la différence entre les potentiels ajustées et les valeurs actuelles sont interprétables dans le court terme comme des potentiels de création de commerce alors que les prévisions du modèle restent des niveaux théoriques de commerce 
 
 ```{r, tidy=TRUE}
 #nous utilisons la formule d'ajustement de fontagné
@@ -596,6 +615,8 @@ write.csv(x=Datacomplete, file="F:/POP.csv")
 
 Didier, Head (2008)
 
+Fontagné, Pajot, Pasteels(2000) "Potentiels de commerce entre économies hétérogènes : un petit mode d'emploi des modèles de gravité
+
 Head, K. and T. Mayer, (2013), "Gravity Equations: Toolkit, Cookbook, Workhorse."  Handbook of International Economics, Vol. 4,eds. Gopinath, Helpman, and Rogoff, Elsevier.
 
 Sevestre P. (2002), « Econométrie des données de panel », Dunod
@@ -609,3 +630,13 @@ Da Silva J.S. et Tenreyro S. (2006), « The log of Gravity », The review of Eco
 Feenstra, R. (2003), « Advanced international trade: Theory and Evidence », Princeton, NJ: Princeton University Press
 
 Fontagné L., Mayer T. et Zignago S. (2005), « A re-evaluation of the impact of regional trade agreements on trade », Draft Version, CEPII
+
+
+```{r}
+Table_Gravite$i<- as.factor(Table_Gravite$i)
+Table_Gravite$j<- as.factor(Table_Gravite$j)
+Table_Gravite$ij<- as.factor(Table_Gravite$ij)
+Table_GraviteFF <- as.ffdf(Table_Gravite)
+
+```
+
