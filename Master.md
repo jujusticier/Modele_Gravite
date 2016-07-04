@@ -47,7 +47,7 @@ Il existe deux branches pour la spécification des modèles de gravité :
 Deardoff (??) reprend l'hypothèse d'Armington sur la différenciation des produits selon leur provenance
 le produit des revenus (Y) des deux partenaires i et j divisés par la distance 
 
-(1) `$$`X_{ij} = \alpha \frac{Y^{\beta_{1}}_{i} Y^{\beta_{2}}_{i}}{D^{\beta_{3}}_{ij}}`$$`
+(1) $$ X_{ij} = \alpha \frac{Y^{\beta_{1}}_{i} Y^{\beta_{2}}_{i}}{D^{\beta_{3}}_{ij}}$$
 
 
 
