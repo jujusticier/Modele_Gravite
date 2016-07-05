@@ -2,6 +2,8 @@
 Script le plus prometteur pour l'instant
 
 #ne pas oublier la clé API
+https://www.bingmapsportal.com/Application#
+
 options(BingMapsKey = "xxxxxxxxxxxxxxxxxxxxxxxxxxx")
 
 ### la fonction georoute ici
