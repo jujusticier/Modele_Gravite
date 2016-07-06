@@ -35,7 +35,7 @@ Nous construirons deux modèles :
 
 
 # 1. Revue de littérature 
-D'abord développée, dans sa forme la plus simple par Tinbergen (1962) et Linnemann (1966), l'équation de gravité fait dépendre les flux bilatéraux de commerce de forces d'attraction et de résistance.Sa robustesse (reconnue par la littérature (Mayer 2001)) en fait un outil privilégié de l'analyse des échanges internationaux de biens et de services (Kimura et Lee 2006).
+Sa robustesse (reconnue par la littérature (Mayer 2001)) en fait un outil privilégié de l'analyse des échanges internationaux de biens et de services (Kimura et Lee 2006).
 
 Il existe deux branches pour la spécification des modèles de gravité : 
 - Les modèles intuitifs ou naifs
@@ -43,6 +43,8 @@ Il existe deux branches pour la spécification des modèles de gravité :
 
 ## 1.1. Le modèle de gravité intuitif
 ## 1.2. Les modèles de gravité théoriques
+On parle de modèle de gravité intuitif, car il trouve son inspiration dans l'intuition suivante. L'intégration d'une économie dans le commerce international semble être une fonction de son poids économique et l'intensité des échanges entre deux économies semble etre une fonction de leur proximité. 
+D'abord développée, dans sa forme la plus simple par Tinbergen (1962) et Linnemann (1966), l'équation de gravité fait dépendre les flux bilatéraux de commerce de ces forces d'attraction et de résistance.
 
 Deardoff (??) reprend l'hypothèse d'Armington sur la différenciation des produits selon leur provenance
 le produit des revenus (Y) des deux partenaires i et j divisés par la distance 
@@ -52,7 +54,7 @@ le produit des revenus (Y) des deux partenaires i et j divisés par la distance
 
 
 
-Avec $\alpha, \beta_1, \beta_2 et \beta_3$ comme paramètres à estimer. L’équation sous une forme log-linéraire afin d’interpréter les coefficients comme des élasticités de flux de commerce (2)
+Avec $\alpha, \beta_1, \beta_2 et \beta_3$ comme paramètres à estimer. L’équation sous une forme log-linéraire  (2)
 
 $$ \ln(X_{ijt})= \alpha + \beta_1\ln(PIB_{it})+\beta_2\ln(PIB_{jt})+\beta_3\ln(POP_{it})+\beta_4\ln(POP_{jt}) +\beta_5\ln(DIST_ij)+\beta_6 Front_ij+ \beta_7LANGCOMM_ij+ \beta_8 ALE_ijt+ ε_ijt$$
 
@@ -90,13 +92,30 @@ Nous utilisons la base de la banque mondiale WDI pour la population. Le signe at
 La variable de distance est exclusivement un proxy des couts de transport. On attend un coefficient négatif.  
 #### 3.1.3.1 Distance géodésique
 
-La variable de distance est classiquement une distance géodésique c'est à dire à vol d'oiseau. Elle est construite en général comme la distance moyenne des plus grandes villes d'un pays avec celles de ces partenaires. Cette méthodologie est largement utilisée dans la littérature. Nous utilisons pour le modèle 1 la base de données CEPII Gravité. 
+La variable de distance est classiquement une distance géodésique c'est à dire à vol d'oiseau, calculées à partir des longitudes et lattitudes de deux points d'interet. Elle est construite en général comme la distance moyenne des plus grandes villes d'un pays avec celles de ces partenaires. Cette méthodologie est largement utilisée dans la littérature. Nous utilisons pour le modèle n°1 la variable de distance pondérée de la base de données CEPII Gravité.
+
+La distance géodésique souffre néanmoins de plusieurs limites : 
+- La trajectoire directe n'est jamais la route réellement suivie par la marchandise. 
+- Elle ne prend pas en compte le poids de chaque mode de transport dans le commerce international. Le coût de chacun d'entre eux ayant pourtant évolué de facon différente au XXe siècle. 
+- certains pays seront structurellement soumis à des couts de transport plus importants que d'autres du fait de leur isolement géographique et/ou de la composition de leur portefeuille de pays partenaires
+- Elle ne permet pas de prendre en compte la distance parcourue à l'intérieur des pays
+
+Malgré ces limites, force est de constater que la distance géodésique utilisée dans la majorité des modèles de gravité détient un pouvoir explicatif relativement fort. A l'inverse, Disdier et Head (2008), montre l'impact limité de l'utilisation de données de distances routières. 
+
 
 #### 3.1.3.2 Distance routière - Dans le cas de l'Union Européenne
 
-Pour compléter on peut se rapprocher d'une définition logistique des échanges, en utilisant la distance routiére. Nous avons récupérer les 5 plus grandes villes des 28 pays européens, puis réalisé une moyenne simple des distances entre ces villes. Cette variante a pour objectif de raffiner la variable de distance pour les pays européens où 70% à 75% des échanges commerciaux sont transportés par la route.
+Afin se rapprocher d'une définition logistique de la distance parcourue par les échanges, on peut utiliser les distances routières et maritimes. Dans un premier temps, afin de limiter le nombre de requêtes nécessaires et de valider la méthodologie, nous n'appliquerons ce traitement qu'au modèle n°2, pour l'Union Européenne. 
 
-Dans les prochaines versions il s'agira de prendre en compte les principaux centres logistiques et non les grandes villes. De plus, cet indicateur pourrait etre transposé au niveau mondial en pondérant par pays la distance par mode de transport. 
+Nous avons récupéré les distances routières entre les 5 plus grandes villes des 28 pays européens, puis réalisé une moyenne simple des distances entre ces villes. Nous avons utilisé l'API de Google Maps et les donnéesde distances maritimes de la base de données de Fouquin et Hugo (2016).
+
+(4) $$ D_{ij} = \frac{\sum M^r D_{ij}^r+M^m D_{ij}^m}{2}$$
+
+On réalise ensuite une moyenne  des distances routières entre couples de pays pondérée par la part des modes de transport du pays exportateur. 
+
+Cette variante a pour objectif de raffiner la variable de distance pour les pays européens où 70% à 75% des échanges commerciaux sont transportés par la route et où les distances géodésiques semblent moins pertinentes.
+
+Dans les prochaines versions il s'agira de prendre en compte les principaux centres logistiques et non les grandes villes et d'élargir la méthodologie au monde. 
 
 Ci dessous la réparatition des échanges dans l'UE par mode de transport
 
@@ -106,6 +125,7 @@ library(ggplot2)
 library(data.table)
 library(plotly)
 
+##### trouver pour chaque pays européen le mix mode de transport par partenaire
 mod_transport <- read.csv(file = paste0(getwd(),"/data-12957078.csv"),sep = ",", dec = ".")
 
 europe <- read.csv(file = paste0(getwd(),"/EuropeanCountries.csv"),sep = ";", dec = ",", header = FALSE)
@@ -155,6 +175,7 @@ L'idée sous-jacente est de lier les échanges commerciaux aux réseaux personne
 
 ### 3.2.5 Variable prenant en compte l'hétérogénéité des pays
 [INDICATRICE à trouver]
+
 ### 3.2.6 Taux de change réel
 [INDICATRICE à trouver]
 
@@ -174,11 +195,12 @@ L'objectif du modéle est de sélectionner des variables afin d'obtenir un modé
 
 #4. Gestion des données
 
-Dans un premier temps nous traiterons les données gravite du CEPII et commerce de la base Chelem (CEPII). Afin d'avoir un socle de données é augmenter par la suite.
+Dans un premier temps nous traiterons les données gravite du CEPII et commerce de la base Chelem (CEPII). Nous utiliserons principalement ces données pour le modèle n°1 et nous modifierons certaines d'entre-elles pour le modèle n°2.
+
 
 
 ```{r results="hide", warning=FALSE,message=FALSE, tidy=TRUE}
-##on charge les bons packages et on augmente la mémoire disponible
+## Charger les bons packages et on augmente la mémoire disponible
 library(data.table)
 library(dplyr)
 library(plm)
@@ -186,6 +208,7 @@ library(stargazer)
 memory.limit(20000)
 ```
 
+Le fichier CSV issu du traitement suivant est disponible sur GitHub 
 ```{r, message=FALSE, warning=FALSE, tidy=TRUE}
 ##on charge les donnees trade directement en data.table
 Donnees_Commerce<- fread(input=paste0(getwd(),"/Chelem.csv"),data.table= TRUE, verbose = FALSE, stringsAsFactors = TRUE )
@@ -343,7 +366,8 @@ Table_Gravite <- bind_rows(Donnees_Gravite,MAJ)
 Table_Gravite <- merge(x=Table_Gravite,y=select(Donnees_Commerce,7,8), by= c("CPA") ,all= FALSE)
 ```
 
-Mise à jour avec les données Fouquin, Hugo 
+
+# Mise à jour avec les données Fouquin, Hugo 
 1. Données de tarifs douanier
 2. Taux de change
 3. Distance maritime
@@ -388,12 +412,13 @@ gc()
 
 ```{r}
 head(Table_Gravite)
+write.csv(x=Table_Gravite, file = paste0(getwd(),"/Table_Gravite.csv"))
 ```
 
 
 
-#Modéles de regression
-## Sur l'ensemble des donnéees 
+# 5. Choix du mode d'estimation
+### 5.1. Regressions sur l'ensemble des donnéees 
 La régression sur l'ensemble des données permet de voir si le modéle général fonctionne 
 ```{r tidy=TRUE}
 #MCO classique
@@ -411,7 +436,7 @@ RegPanel_pool <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log
 RegPoiss <- glm(v ~ log(gdp_o)+log(gdp_d)+log(distw)+log(pop_o)+log(pop_d)+contig+comcur+commlang+EU+factor(CPA)-1, data=Table_Gravite, na.action = na.omit, family = quasipoisson(link="log"), y=FALSE,model = FALSE)
 ```
 
-Idem sur 20 ans 
+### 5.2. Regressions sur 20 ans 
 ```{r cache=TRUE, tidy=TRUE}
 #MCO classique
 RegMCO96 <- lm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d+rta, data= Table_Gravite96_06 , na.action = na.omit)
@@ -437,7 +462,7 @@ RegPoiss96bis <- glm(v ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpc
 
 
 
-###Premiers résultats obtenus
+### 5.3 Premiers résultats obtenus
 Sur l'ensemble des données 
 ```{r results="asis", echo=FALSE, tidy=TRUE}
 stargazer(RegPanelTime, RegPanelCountry, RegPanel_pool ,RegMCO, RegPoiss,column.labels = c("Panel Temps","Panel Pays","Panel Pooled", "MCO", "QuasiPoisson") ,type = "html")
@@ -613,7 +638,7 @@ write.csv(x=Datacomplete, file="F:/POP.csv")
 
 # Bibliographie
 
-Didier, Head (2008)
+Disdier, Head (2008), "The Puzzling Persistence of the Distance Effect on Bilateral Trade"
 
 Fontagné, Pajot, Pasteels(2000) "Potentiels de commerce entre économies hétérogènes : un petit mode d'emploi des modèles de gravité
 
