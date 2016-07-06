@@ -17,6 +17,8 @@ knitr::opts_chunk$set(echo = TRUE)
 - Finir de mettre à jour la base de donnes
 - verifier les unités des variables
 - Voir colonne 18 bizarre
+-  Mettre à jour le script google
+- Refaire code sur mode de transport pour avoir du bilateral !
 
 
 # Introduction
