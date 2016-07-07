@@ -40,7 +40,7 @@ rm(Ville_europe,Ville_monde)
 # les donnees sont déja en bon format
 
 x <-list()
-for(i in 1:2499){
+for(i in 1001:2499){
   from<- c(TableVille_Europe$From[i])
   to <- c(TableVille_Europe$To[i])
   x[[i]]<-mapdist(from,to,output = c("simple"),mode = c("driving"), messaging= FALSE)
@@ -55,7 +55,7 @@ Tabledistance <- merge(x=Tabledistance,y=Table_Ville.Pays, by.x="from",by.y="Vil
 Tabledistance <- rename(Tabledistance, Country.from = Ville_europe.country.etc)
 
 #écrire un nouveau CSV par jour
-write.csv(Tabledistance,file=paste0(getwd(),"/Dist1.csv"))
+write.csv(Tabledistance,file=paste0(getwd(),"/Dist2.csv"))
 
 
 
