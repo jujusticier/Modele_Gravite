@@ -11,7 +11,7 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-#  TO DO LIST
+# TO DO LIST
 - Harmoniser et finaliser la liste de variable à intégrer dans les modèles
 - Ajouter indicatrice EU et Schengen
 - Finir de mettre à jour la base de donnes
@@ -19,6 +19,7 @@ knitr::opts_chunk$set(echo = TRUE)
 - Voir colonne 18 bizarre
 -  Mettre à jour le script google
 - Refaire code sur mode de transport pour avoir du bilateral !
+- Que se passe t il avec le GATT ?!
 
 
 # Introduction
@@ -182,7 +183,7 @@ rm(dist, iso_europe,Distance.complete)
 
 
 
-#################### On utilise la base de 
+#################### On utilise la base de donnees de Fouquin et Hugo
 
 ```
 
@@ -263,8 +264,6 @@ L'objectif du modéle est de sélectionner des variables afin d'obtenir un modé
 |   |   |
 |   |   |
 |   |   |
-|---|---|
-
 
 #4. Gestion des données
 
@@ -442,8 +441,9 @@ Table_Gravite <- merge(x=Table_Gravite,y=select(Donnees_Commerce,7,8), by= c("CP
 1. Données de tarifs douanier
 2. Taux de change
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 # Tout d'abord passons la base en .csv et selectionnons les variables qui nous interessent
+##################### a faire
 Donnees_long<- haven::read_dta(path = paste0(getwd(),"/TRADHIST_WP.dta"))
 Donnees_long$CPA <- paste(Donnees_long$iso_o,Donnees_long$iso_d, Donnees_long$year)
 
@@ -478,7 +478,7 @@ On peut maintenant créer les subsets de la base de données
 Table_Gravite94_14 <- filter(Table_Gravite, year > 1993)
 
 #Sur les pays de l'UE
-Table_Gravite_UE <- filter(Table_Gravite$EU == 1)
+#Table_Gravite_UE <- filter(Table_Gravite$EU == 1)
 
 ```
 
@@ -489,7 +489,7 @@ Vous trouverez l'ensemble des données traitées et des données sources sur Git
 head(Table_Gravite)
 write.csv(x=Table_Gravite, file = paste0(getwd(),"/Tables_traitees/Table_Gravite.csv"))
 write.csv(x=Table_Gravite94_14, file = paste0(getwd(),"/Tables_traitees/Table_Gravite94_14.csv"))
-write.csv(x=Table_Gravite_UE, file = paste0(getwd(),"/Tables_traitees/Table_Gravite_UE.csv"))
+#write.csv(x=Table_Gravite_UE, file = paste0(getwd(),"/Tables_traitees/Table_Gravite_UE.csv"))
 
 ```
 
@@ -503,52 +503,44 @@ La régression sur l'ensemble des données permet de voir si le modèle généra
 M1_RegMCO <- lm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(pop_o)+log(pop_d)+contig+comcur+commlang+rta, data = Table_Gravite , na.action = na.omit)
 
 #Equation de gravite en panel avec différents effets fixes
-M1_RegPanel_EFTemps <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d+rta, data=Table_Gravite, index= c("ij","year"), model = c("within"), effect=c("time"), na.action= na.omit)
+M1_RegPanel_EFTemps <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+rta, data=Table_Gravite, index= c("ij","year"), model = c("within"), effect=c("time"), na.action= na.omit)
 
-M1_RegPanel_EFPays <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d+rta, data=Table_Gravite, index= c("ij","year"), model = c("within"), effect=c("individual"), na.action= na.omit)
+M1_RegPanel_EFPays <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+rta, data=Table_Gravite, index= c("ij","year"), model = c("within"), effect=c("individual"), na.action= na.omit)
 
 #glm PML Poisson
 M1_RegPoiss <- glm(v ~ log(gdp_o)+log(gdp_d)+log(distw)+log(pop_o)+log(pop_d)+contig+comcur+commlang+EU, data=Table_Gravite, na.action = na.omit, family = quasipoisson(link="log"), y=FALSE,model = FALSE)
 ```
 
 ```{r results="asis", echo=FALSE, tidy=TRUE}
-stargazer(M1_RegMCO, M1_RegPanel_EFTemps, M1_RegPanel_EFPays ,M1_RegPoiss,column.labels = c("MCO","Panel Effet Fixe Temps","Panel Effet Fixe Pays", "PseudoMaximum de Poisson") ,type = "html")
+stargazer(M1_RegMCO, M1_RegPanel_EFTemps, M1_RegPanel_EFPays ,M1_RegPoiss,column.labels = c("MCO","Panel Effet Fixe Temps","Panel Effet Fixe Pays", "PseudoMaximum de Poisson") ,type = "html",title = "Modèle Monde 1967-2014" )
 ```
 
 
 ### 5.2. Pour le modèle mondial : regressions sur 20 ans
 
-### 5.2. Regressions sur 20 ans 
 ```{r cache=TRUE, tidy=TRUE}
 #MCO classique
-RegMCO96 <- lm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d+rta, data= Table_Gravite94_14 , na.action = na.omit)
+M1_RegMCO_20 <- lm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+rta, data= Table_Gravite94_14 , na.action = na.omit)
 
-#Equation de gravite en panel
-RegPanelTime96bis <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d, data=Table_Gravite94_14, index= c("ij","year"), model = c("within"), effect=c("time"), na.action= na.omit)
+#Equation de gravite en panel avec effets fixes
+M1_RegPanelTime_20 <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang, data=Table_Gravite94_14, index= c("ij","year"), model = c("within"), effect=c("time"), na.action= na.omit)
 
-RegPanelCountry96 <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d, data=Table_Gravite94_14, index= c("ij","year"), model = c("within"), effect=c("individual"), na.action= na.omit)
-
-#Sans utiliser le plm
-RegPanelMCO96 <-lm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d+factor(year)-1, data= Table_Gravite94_14 , na.action = na.omit)
-
-#En MCO classique on retrouve bien les memes coefs
-RegPanel_pool96 <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d, data=Table_Gravite94_14, index= c("ij","year"), model = c("pooling"),na.action= na.omit)
+M1_RegPanelCountry_20 <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang, data=Table_Gravite94_14, index= c("ij","year"), model = c("within"), effect=c("individual"), na.action= na.omit)
 
 #glm poisson
-RegPoiss96 <- glm(v ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d, data=Table_Gravite94_14, na.action = na.omit, family = quasipoisson(link="log"))
-#effet fixe annee
-RegPoiss96bis <- glm(v ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d+factor(year)-1, data=Table_Gravite94_14, na.action = na.omit, family = quasipoisson(link="log"))
+M1_RegPoiss_20 <- glm(v ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang, data=Table_Gravite94_14, na.action = na.omit, family = quasipoisson(link="log"))
+
+# effet fixe annee
+# RegPoiss96bis <- glm(v ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d+factor(year)-1, data=Table_Gravite94_14, na.action = na.omit, family = quasipoisson(link="log"))
 
 ```
 
 
-
-
-### 5.3 Premiers résultats obtenus
-Sur 20 ans
 ```{r results="asis", echo=FALSE, tidy=TRUE}
-stargazer(RegPanelTime96bis, RegPanelCountry96, RegPanel_pool96 ,RegMCO96, RegPoiss96bis,column.labels = c("Panel Temps","Panel Pays","Panel Pooled", "MCO", "QuasiPoissontemps") ,type = "html")
+stargazer(M1_RegMCO_20, M1_RegPanelTime_20, M1_RegPanelCountry_20 ,M1_RegPoiss_20,column.labels = c("MCO","Panel Effets fixes années","Panel effets fixes pays", "Quasi Poisson") ,type = "html", title = "Modèle Monde 1994-2014" )
 ```
+
+### 5.3 Pour le modèle Européen : regressions sur l'ensemble des données 
 
 ### Pour obtenir des standards erreurs robustes
 ```{r}
@@ -557,17 +549,14 @@ stargazer(RegPanelTime96bis, RegPanelCountry96, RegPanel_pool96 ,RegMCO96, RegPo
 library("lmtest") 
 library("sandwich") 
 
-coeftest(RegPoiss, vcov = sandwich)
+coeftest(M1_RegPoiss_20, vcov = sandwich)
+
 ```
 
  
-
-
-
-
 ### Premières prévisions sur modèle monde et potentiel de commerce
 
-```{r, tidy=TRUE}
+```{r, tidy=TRUE,eval=FALSE, include=FALSE}
 
 library(dplyr)
 library(data.table)
@@ -601,7 +590,7 @@ En prenant les estimations des modèles ci-dessus, on obtient le flux théorique
 
 Dans ces conditions, la différence entre les potentiels ajustées et les valeurs actuelles sont interprétables dans le court terme comme des potentiels de création de commerce alors que les prévisions du modèle restent des niveaux théoriques de commerce 
 
-```{r, tidy=TRUE}
+```{r, tidy=TRUE,eval=FALSE, include=FALSE}
 #nous utilisons la formule d'ajustement de fontagné
 Table_Prev$ajust <- (Table_Prev$fit*(sum(Table_Prev$v, na.rm = TRUE )-Table_Prev$v)) /(sum(Table_Prev$fit,na.rm = TRUE)-Table_Prev$fit)
 
@@ -623,7 +612,7 @@ Modéle Hausman-Taylor pour l'endogénéité
 # Augmenter le modèle
 Pour obtenir les données de distances routières nous utilisons l'API Google avec le script suivant :
 
-```{r ,eval=FALSE}
+```{r ,eval=FALSE, include=FALSE}
 library(data.table)
 library(ggmap)
 library(dplyr)
@@ -686,7 +675,7 @@ write.csv(Tabledistance,file=paste0(getwd(),"/Dist1.csv"))
 ```
 
 Pour mettre à jour les donnees on peut utiliser l'API worldbank avec ce code (modifier l'adresse de la requete JSON)
-```{r, eval=FALSE}
+```{r, eval=FALSE, include=FALSE}
 library(jsonlite)
 #utiliser le csv préparé sur github
 conversion2 <- read.csv2(file=file.choose())
@@ -714,6 +703,20 @@ write.csv(x=Datacomplete, file="F:/POP.csv")
 ```
 
 
+
+
+```{r eval=FALSE, include=FALSE}
+Table_Gravite$i<- as.factor(Table_Gravite$i)
+Table_Gravite$j<- as.factor(Table_Gravite$j)
+Table_Gravite$ij<- as.factor(Table_Gravite$ij)
+Table_GraviteFF <- as.ffdf(Table_Gravite)
+
+```
+
+
+
+
+
 # Bibliographie
 
 Disdier, Head (2008), "The Puzzling Persistence of the Distance Effect on Bilateral Trade"
@@ -733,14 +736,3 @@ Da Silva J.S. et Tenreyro S. (2006), « The log of Gravity », The review of Eco
 Feenstra, R. (2003), « Advanced international trade: Theory and Evidence », Princeton, NJ: Princeton University Press
 
 Fontagné L., Mayer T. et Zignago S. (2005), « A re-evaluation of the impact of regional trade agreements on trade », Draft Version, CEPII
-
-
-```{r}
-Table_Gravite$i<- as.factor(Table_Gravite$i)
-Table_Gravite$j<- as.factor(Table_Gravite$j)
-Table_Gravite$ij<- as.factor(Table_Gravite$ij)
-Table_GraviteFF <- as.ffdf(Table_Gravite)
-
-```
-
-
