@@ -18,6 +18,7 @@ knitr::opts_chunk$set(echo = TRUE)
 - verifier les unités des variables
 - Voir colonne 18 bizarre
 -  Mettre à jour le script google
+-Check sur la distance : dist7 s'arrete ou ? 
 - Refaire code sur mode de transport pour avoir du bilateral !
 
 

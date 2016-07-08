@@ -40,10 +40,10 @@ rm(Ville_europe,Ville_monde)
 # les donnees sont déja en bon format
 
 x <-list()
-for(i in 2500:5999){
+for(i in 16000:18499){
   from<- c(TableVille_Europe$From[i])
   to <- c(TableVille_Europe$To[i])
-  x[[i]]<-mapdist(from,to,output = c("simple"),mode = c("driving"), messaging= FALSE)
+  x[[i-15999]]<-mapdist(from,to,output = c("simple"),mode = c("driving"), messaging= FALSE)
   message("Traite la ligne",i)
 }
 Tabledistance <- rbindlist(x, fill=TRUE)
@@ -53,9 +53,9 @@ Tabledistance <- merge(x=Tabledistance,y=Table_Ville.Pays, by.x="to",by.y="Ville
 Tabledistance <- rename(Tabledistance, Country.to = Ville_europe.country.etc)
 Tabledistance <- merge(x=Tabledistance,y=Table_Ville.Pays, by.x="from",by.y="Ville_europe.name",all = FALSE)
 Tabledistance <- rename(Tabledistance, Country.from = Ville_europe.country.etc)
-Tabledistance <- distinct(Tabledistance)
+
 #écrire un nouveau CSV par jour
-write.csv(Tabledistance,file=paste0(getwd(),"/Dist3.csv"))
+write.csv(Tabledistance,file=paste0(getwd(),"/Dist8.csv"))
 
 
 
