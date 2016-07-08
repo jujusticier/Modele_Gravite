@@ -18,7 +18,6 @@ knitr::opts_chunk$set(echo = TRUE)
 - verifier les unités des variables
 - Voir colonne 18 bizarre
 -  Mettre à jour le script google
--Check sur la distance : dist7 s'arrete ou ? 
 - Refaire code sur mode de transport pour avoir du bilateral !
 
 
@@ -124,14 +123,53 @@ Ci dessous la réparatition des échanges dans l'UE par mode de transport
 
 ```{r warning=FALSE, message=FALSE, echo=FALSE,eval=FALSE}
 library(dplyr)
+library(data.table)
+
+## Après récupération des données avec le script Goog on peut fusionner les fichiers et obtenir la liste des distances routières
+
+## on crée une liste avec le chemin du fichier
+dist <- list.files(paste0(getwd(),"/data/DistanceRout"), full.names = TRUE)
+
+## on utilise lapply pour lire à la suite et eviter de faire une boucle
+Distance.complete <- lapply(dist, fread)
+
+##on récupère une liste, qu'on transforme en data.frame
+Distance.complete <- rbindlist(Distance.complete)
+
+##on va chercher une table de correspondance (compte tenu des data du package maps)
+iso_europe <- fread(input= paste0(getwd(),"/data/ISOeurope.csv"))
+
+## on ajoute les ISO3
+Distance.complete <- merge(x=Distance.complete,y = select(iso_europe,2:3), by.x = "Country.to", by.y = "x", all.x = TRUE,suffixes = ".to")
+
+Distance.complete <- merge(x=Distance.complete,y = select(iso_europe,2:3), by.x = "Country.from", by.y = "x", all.x = TRUE,suffixes = ".from")
+
+## on clean un peu 
+Distance.complete<- rename(Distance.complete, i = ISO3.from, j= ISO3NA)
+
+#on moyenne par couple de pays : miracle on trouve 28² couples!! nb à ce stade on a pas encore résolu le problème de Napple
+Distance_Moyenne <- aggregate(select(Distance.complete,7,11), by=list(Distance.complete$i,Distance.complete$j), FUN = mean, na.rm=TRUE)
+
+#on ajoute un IJ pour la fusion plus tard
+Distance_Moyenne$ij <- paste0(Distance_Moyenne$Group.1,Distance_Moyenne$Group.2)
+
+#on clean l'espace
+rm(dist, iso_europe,Distance.complete)
+
+
+```
+
+
+```{r warning=FALSE, message=FALSE, echo=FALSE,eval=FALSE}
+library(dplyr)
 library(ggplot2)
 library(data.table)
 library(plotly)
 
 ##### trouver pour chaque pays européen le mix mode de transport par partenaire
-mod_transport <- read.csv(file = paste0(getwd(),"/data-12957078.csv"),sep = ",", dec = ".")
+mod_transport <- read.csv(file = paste0(getwd(),"/data/MixTranspMode.csv"),sep = ",", dec = ".")
 
-europe <- read.csv(file = paste0(getwd(),"/EuropeanCountries.csv"),sep = ";", dec = ",", header = FALSE)
+europe <- read.csv(file = paste0(getwd(),"/data/EuropeanCountries.csv"),sep = ";", dec = ",", header = FALSE)
 
 testmerge <- merge(x=mod_transport, y=europe, by.x=c("PARTNER_LAB"), by.y=c("V1"), all= FALSE)
 MTeurope <- filter(testmerge, V2 == 1)
@@ -214,7 +252,7 @@ memory.limit(20000)
 Le fichier CSV issu du traitement suivant est disponible sur GitHub 
 ```{r, message=FALSE, warning=FALSE, tidy=TRUE}
 ##on charge les donnees trade directement en data.table
-Donnees_Commerce<- fread(input=paste0(getwd(),"/Chelem.csv"),data.table= TRUE, verbose = FALSE, stringsAsFactors = TRUE )
+Donnees_Commerce<- fread(input=paste0(getwd(),"/data/Chelem.csv"),data.table= TRUE, verbose = FALSE, stringsAsFactors = TRUE )
 
 ##Renomer la variable t pour la transformer en year
 Donnees_Commerce <- rename(Donnees_Commerce, year=t)
@@ -226,7 +264,7 @@ Donnees_Commerce <- filter(Donnees_Commerce, k == "TT")
 
 ```{r,message=FALSE, warning=FALSE, tidy=TRUE}
 ##on charge les donnees gravité directement en data.table
-Donnees_Gravite <- fread(input=paste0(getwd(),"/gravdata_cepii.csv"),data.table= TRUE,verbose = FALSE)
+Donnees_Gravite <- fread(input=paste0(getwd(),"/data/gravdata_cepii.csv"),data.table= TRUE,verbose = FALSE)
 
 ## Reduit les donnees de gravité é 1967, car nous n'avons pas de données commerce avant cette date
 Donnees_Gravite <- filter(Donnees_Gravite, year > 1966)
