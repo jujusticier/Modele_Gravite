@@ -145,7 +145,7 @@ ggplotly(Graph_Transport)
 
 Pour calculer la distance logistique on utilise le code suivant : 
 
-```{r warning=FALSE}
+```{r warning=FALSE , message=FALSE}
 library(dplyr)
 library(data.table)
 
@@ -172,7 +172,8 @@ Distance.complete <- merge(x=Distance.complete,y = select(iso_europe,2:3), by.x 
 Distance.complete<- rename(Distance.complete, i = ISO3.from, j= ISO3NA)
 
 #on moyenne par couple de pays : miracle on trouve 28² couples!! nb à ce stade on a pas encore résolu le problème de Napple
-Distance_Moyenne <- aggregate(select(Distance.complete,7,11), by=list(Distance.complete$i,Distance.complete$j), FUN = mean, na.rm=TRUE)
+
+Distance_Moyenne <- aggregate(select(Distance.complete,7,11), by=list(Distance.complete$i,Distance.complete$j), FUN = mean, na.rm=TRUE) #exemple d'utilisation d'aggregate
 
 #on ajoute un IJ pour la fusion plus tard
 Distance_Moyenne$ij <- paste0(Distance_Moyenne$Group.1,Distance_Moyenne$Group.2)
@@ -279,7 +280,7 @@ memory.limit(20000)
 ```
 
 Le fichier CSV issu du traitement suivant est disponible sur GitHub 
-```{r, message=FALSE, warning=FALSE, tidy=TRUE}
+```{r message=FALSE, warning=FALSE, tidy=TRUE}
 ##on charge les donnees trade directement en data.table
 Donnees_Commerce<- fread(input=paste0(getwd(),"/Data/Chelem.csv"),data.table= TRUE, verbose = FALSE, stringsAsFactors = TRUE )
 
@@ -503,9 +504,9 @@ La régression sur l'ensemble des données permet de voir si le modèle généra
 M1_RegMCO <- lm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(pop_o)+log(pop_d)+contig+comcur+commlang+rta, data = Table_Gravite , na.action = na.omit)
 
 #Equation de gravite en panel avec différents effets fixes
-M1_RegPanel_EFTemps <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+rta, data=Table_Gravite, index= c("ij","year"), model = c("within"), effect=c("time"), na.action= na.omit)
+M1_RegPanel_EFTemps <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(pop_o)+log(pop_d)+contig+comcur+commlang+rta, data=Table_Gravite, index= c("ij","year"), model = c("within"), effect=c("time"), na.action= na.omit)
 
-M1_RegPanel_EFPays <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+rta, data=Table_Gravite, index= c("ij","year"), model = c("within"), effect=c("individual"), na.action= na.omit)
+M1_RegPanel_EFPays <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(pop_o)+log(pop_d)+contig+comcur+commlang+rta, data=Table_Gravite, index= c("ij","year"), model = c("within"), effect=c("individual"), na.action= na.omit)
 
 #glm PML Poisson
 M1_RegPoiss <- glm(v ~ log(gdp_o)+log(gdp_d)+log(distw)+log(pop_o)+log(pop_d)+contig+comcur+commlang+EU, data=Table_Gravite, na.action = na.omit, family = quasipoisson(link="log"), y=FALSE,model = FALSE)
@@ -520,15 +521,15 @@ stargazer(M1_RegMCO, M1_RegPanel_EFTemps, M1_RegPanel_EFPays ,M1_RegPoiss,column
 
 ```{r cache=TRUE, tidy=TRUE}
 #MCO classique
-M1_RegMCO_20 <- lm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+rta, data= Table_Gravite94_14 , na.action = na.omit)
+M1_RegMCO_20 <- lm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(pop_o)+log(pop_d)+contig+comcur+commlang+rta, data= Table_Gravite94_14 , na.action = na.omit)
 
 #Equation de gravite en panel avec effets fixes
-M1_RegPanelTime_20 <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang, data=Table_Gravite94_14, index= c("ij","year"), model = c("within"), effect=c("time"), na.action= na.omit)
+M1_RegPanelTime_20 <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(pop_o)+log(pop_d)+contig+comcur+commlang+rta, data=Table_Gravite94_14, index= c("ij","year"), model = c("within"), effect=c("time"), na.action= na.omit)
 
-M1_RegPanelCountry_20 <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang, data=Table_Gravite94_14, index= c("ij","year"), model = c("within"), effect=c("individual"), na.action= na.omit)
+M1_RegPanelCountry_20 <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(pop_o)+log(pop_d)+contig+comcur+commlang+rta, data=Table_Gravite94_14, index= c("ij","year"), model = c("within"), effect=c("individual"), na.action= na.omit)
 
 #glm poisson
-M1_RegPoiss_20 <- glm(v ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang, data=Table_Gravite94_14, na.action = na.omit, family = quasipoisson(link="log"))
+M1_RegPoiss_20 <- glm(v ~ log(gdp_o)+log(gdp_d)+log(distw)+log(pop_o)+log(pop_d)+contig+comcur+commlang+rta, data=Table_Gravite94_14, na.action = na.omit, family = quasipoisson(link="log"))
 
 # effet fixe annee
 # RegPoiss96bis <- glm(v ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d+factor(year)-1, data=Table_Gravite94_14, na.action = na.omit, family = quasipoisson(link="log"))
@@ -543,7 +544,7 @@ stargazer(M1_RegMCO_20, M1_RegPanelTime_20, M1_RegPanelCountry_20 ,M1_RegPoiss_2
 ### 5.3 Pour le modèle Européen : regressions sur l'ensemble des données 
 
 ### Pour obtenir des standards erreurs robustes
-```{r}
+```{r warning=FALSE, render= TRUE,message= FALSE}
 #utile pour l'estimation de poisson, il va falloir les intégrer à stargazer
 
 library("lmtest") 
