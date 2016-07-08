@@ -123,6 +123,29 @@ Ci dessous la réparatition des échanges dans l'UE par mode de transport
 
 ```{r warning=FALSE, message=FALSE, echo=FALSE,eval=FALSE}
 library(dplyr)
+library(ggplot2)
+library(data.table)
+library(plotly)
+
+##### trouver pour chaque pays européen le mix mode de transport par partenaire
+mod_transport <- read.csv(file = paste0(getwd(),"/data/MixTranspMode.csv"),sep = ",", dec = ".")
+
+europe <- read.csv(file = paste0(getwd(),"/data/EuropeanCountries.csv"),sep = ";", dec = ",", header = FALSE)
+
+testmerge <- merge(x=mod_transport, y=europe, by.x=c("PARTNER_LAB"), by.y=c("V1"), all= FALSE)
+MTeurope <- filter(testmerge, V2 == 1)
+MTeurope <- data.table(MTeurope)
+MTeurope <- setkey(MTeurope, value=TRANSPORT_MODE_LAB)
+Graph_Transport  <- ggplot(MTeurope, aes(y=INDICATOR_VALUE, x=PERIOD_LAB, fill=TRANSPORT_MODE_LAB)) +geom_bar(stat="identity", position="fill")
+
+ggplotly(Graph_Transport)
+```
+
+
+Pour calculer la distance logistique on utilise le code suivant : 
+
+```{r warning=FALSE}
+library(dplyr)
 library(data.table)
 
 ## Après récupération des données avec le script Goog on peut fusionner les fichiers et obtenir la liste des distances routières
@@ -157,31 +180,17 @@ Distance_Moyenne$ij <- paste0(Distance_Moyenne$Group.1,Distance_Moyenne$Group.2)
 rm(dist, iso_europe,Distance.complete)
 
 
+
+
+#################### On utilise la base de 
+
 ```
 
 
-```{r warning=FALSE, message=FALSE, echo=FALSE,eval=FALSE}
-library(dplyr)
-library(ggplot2)
-library(data.table)
-library(plotly)
 
-##### trouver pour chaque pays européen le mix mode de transport par partenaire
-mod_transport <- read.csv(file = paste0(getwd(),"/data/MixTranspMode.csv"),sep = ",", dec = ".")
-
-europe <- read.csv(file = paste0(getwd(),"/data/EuropeanCountries.csv"),sep = ";", dec = ",", header = FALSE)
-
-testmerge <- merge(x=mod_transport, y=europe, by.x=c("PARTNER_LAB"), by.y=c("V1"), all= FALSE)
-MTeurope <- filter(testmerge, V2 == 1)
-MTeurope <- data.table(MTeurope)
-MTeurope <- setkey(MTeurope, value=TRANSPORT_MODE_LAB)
-Graph_Transport  <- ggplot(MTeurope, aes(y=INDICATOR_VALUE, x=PERIOD_LAB, fill=TRANSPORT_MODE_LAB)) +geom_bar(stat="identity", position="fill")
-
-ggplotly(Graph_Transport)
-```
 
 #### 3.1.3.2 Distance logistique 
-On peut raffiner la distance entre les pays
+On peut appliquer la méthode ci dessus à l'ensemble des pays. 
 
 #### 3.1.3.3 Pondération de la distance : Remoteness 
 Il faut introduire une variable de distance relative (Deardoff 1998, Baldwin et Taglioni 2006) sur le modelé de Wei 1996, on appellera cette variable REMOT pour remotness (typiquement l'australie et la Nouvelle-Zélande commerce plus en entre eux car sont isolés). On choisit cette option car elle semble compatible é la fois avec les distances routiéres et les distance géodésiques: 
@@ -198,6 +207,10 @@ L'indicatrice d'origine légale commune provient d'Andrei Shleifer (http://post.
 
 ### 3.1.6 Accord commercial régional 
 L'indicatrice d'accord de libre échange (RTA) provient de la base de donnees gravité CEPII. Le signe attendu est positif
+
+### 3.1.7 Appartenance à l'Union Européenne.
+
+[selon les résultats cette dummy pourra etre écartée au profit de RTA]
 
 
 ## 3.2 Autres variables indicatrices à intégrer
@@ -234,11 +247,28 @@ Malgré la qualité du travail de Head sur le sujet, nous ne reprenons pas ici l
 ## Synthése des variables
 L'objectif du modéle est de sélectionner des variables afin d'obtenir un modéle cour et pouvoir y ajouter des variables indicatrice permettant de mesurer l'impact de certains faits économiques sur le commerce é long terme. 
 
+| Variable  | Description   |
+|---|---|
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+|---|---|
+
+
 #4. Gestion des données
 
 Dans un premier temps nous traiterons les données gravite du CEPII et commerce de la base Chelem (CEPII). Nous utiliserons principalement ces données pour le modèle n°1 et nous modifierons certaines d'entre-elles pour le modèle n°2.
-
-
 
 ```{r results="hide", warning=FALSE,message=FALSE, tidy=TRUE}
 ## Charger les bons packages et on augmente la mémoire disponible
@@ -411,10 +441,10 @@ Table_Gravite <- merge(x=Table_Gravite,y=select(Donnees_Commerce,7,8), by= c("CP
 # Mise à jour avec les données Fouquin, Hugo 
 1. Données de tarifs douanier
 2. Taux de change
-3. Distance maritime
 
 ```{r}
- Donnees_long<- haven::read_dta(path = paste0(getwd(),"/TRADHIST_WP.dta"))
+# Tout d'abord passons la base en .csv et selectionnons les variables qui nous interessent
+Donnees_long<- haven::read_dta(path = paste0(getwd(),"/TRADHIST_WP.dta"))
 Donnees_long$CPA <- paste(Donnees_long$iso_o,Donnees_long$iso_d, Donnees_long$year)
 
 Table_Gravite <- merge(Table_Gravite,select(Donnees_long,61,27), by="CPA",all.x = TRUE)
@@ -442,61 +472,72 @@ rm(Donnees_Gravite,Donnees_Commerce,MAJ, Donnees_Gravite06)
 
 ```
 
+On peut maintenant créer les subsets de la base de données 
 ```{r, tidy=TRUE }
-#On peut prendre les données sur 20 ans
-Table_Gravite96_06 <- filter(Table_Gravite, year > 1995)
+#Sur 20 ans
+Table_Gravite94_14 <- filter(Table_Gravite, year > 1993)
+
+#Sur les pays de l'UE
+Table_Gravite_UE <- filter(Table_Gravite$EU == 1)
+
 ```
 
-```{r include=FALSE}
-gc()
-```
+### 4.4 Reproductibilité
+Vous trouverez l'ensemble des données traitées et des données sources sur GitHub : https://github.com/kl4k/Modele_Gravite 
 
 ```{r}
 head(Table_Gravite)
-write.csv(x=Table_Gravite, file = paste0(getwd(),"/Table_Gravite.csv"))
+write.csv(x=Table_Gravite, file = paste0(getwd(),"/Tables_traitees/Table_Gravite.csv"))
+write.csv(x=Table_Gravite94_14, file = paste0(getwd(),"/Tables_traitees/Table_Gravite94_14.csv"))
+write.csv(x=Table_Gravite_UE, file = paste0(getwd(),"/Tables_traitees/Table_Gravite_UE.csv"))
+
 ```
 
 
 
 # 5. Choix du mode d'estimation
-### 5.1. Regressions sur l'ensemble des donnéees 
-La régression sur l'ensemble des données permet de voir si le modéle général fonctionne 
-```{r tidy=TRUE}
+### 5.1. Pour le modèle mondial : regressions sur l'ensemble des donnéees 
+La régression sur l'ensemble des données permet de voir si le modèle général fonctionne 
+```{r tidy=TRUE, echo=FALSE}
 #MCO classique
-RegMCO <- lm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(pop_o)+log(pop_d)+contig+comcur+commlang+rta, data= Table_Gravite , na.action = na.omit)
+M1_RegMCO <- lm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(pop_o)+log(pop_d)+contig+comcur+commlang+rta, data = Table_Gravite , na.action = na.omit)
 
-#Equation de gravite en panel
-RegPanelTime <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d+rta, data=Table_Gravite, index= c("ij","year"), model = c("within"), effect=c("time"), na.action= na.omit)
+#Equation de gravite en panel avec différents effets fixes
+M1_RegPanel_EFTemps <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d+rta, data=Table_Gravite, index= c("ij","year"), model = c("within"), effect=c("time"), na.action= na.omit)
 
-RegPanelCountry <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d+rta, data=Table_Gravite, index= c("ij","year"), model = c("within"), effect=c("individual"), na.action= na.omit)
+M1_RegPanel_EFPays <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d+rta, data=Table_Gravite, index= c("ij","year"), model = c("within"), effect=c("individual"), na.action= na.omit)
 
-#En MCO classique on retrouve bien les memes coefs
-RegPanel_pool <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d+rta, data=Table_Gravite, index= c("ij","year"), model = c("pooling"),na.action= na.omit)
-
-#glm poisson
-RegPoiss <- glm(v ~ log(gdp_o)+log(gdp_d)+log(distw)+log(pop_o)+log(pop_d)+contig+comcur+commlang+EU+factor(CPA)-1, data=Table_Gravite, na.action = na.omit, family = quasipoisson(link="log"), y=FALSE,model = FALSE)
+#glm PML Poisson
+M1_RegPoiss <- glm(v ~ log(gdp_o)+log(gdp_d)+log(distw)+log(pop_o)+log(pop_d)+contig+comcur+commlang+EU, data=Table_Gravite, na.action = na.omit, family = quasipoisson(link="log"), y=FALSE,model = FALSE)
 ```
+
+```{r results="asis", echo=FALSE, tidy=TRUE}
+stargazer(M1_RegMCO, M1_RegPanel_EFTemps, M1_RegPanel_EFPays ,M1_RegPoiss,column.labels = c("MCO","Panel Effet Fixe Temps","Panel Effet Fixe Pays", "PseudoMaximum de Poisson") ,type = "html")
+```
+
+
+### 5.2. Pour le modèle mondial : regressions sur 20 ans
 
 ### 5.2. Regressions sur 20 ans 
 ```{r cache=TRUE, tidy=TRUE}
 #MCO classique
-RegMCO96 <- lm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d+rta, data= Table_Gravite96_06 , na.action = na.omit)
+RegMCO96 <- lm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d+rta, data= Table_Gravite94_14 , na.action = na.omit)
 
 #Equation de gravite en panel
-RegPanelTime96bis <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d, data=Table_Gravite96_06, index= c("ij","year"), model = c("within"), effect=c("time"), na.action= na.omit)
+RegPanelTime96bis <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d, data=Table_Gravite94_14, index= c("ij","year"), model = c("within"), effect=c("time"), na.action= na.omit)
 
-RegPanelCountry96 <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d, data=Table_Gravite96_06, index= c("ij","year"), model = c("within"), effect=c("individual"), na.action= na.omit)
+RegPanelCountry96 <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d, data=Table_Gravite94_14, index= c("ij","year"), model = c("within"), effect=c("individual"), na.action= na.omit)
 
 #Sans utiliser le plm
-RegPanelMCO96 <-lm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d+factor(year)-1, data= Table_Gravite96_06 , na.action = na.omit)
+RegPanelMCO96 <-lm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d+factor(year)-1, data= Table_Gravite94_14 , na.action = na.omit)
 
 #En MCO classique on retrouve bien les memes coefs
-RegPanel_pool96 <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d, data=Table_Gravite96_06, index= c("ij","year"), model = c("pooling"),na.action= na.omit)
+RegPanel_pool96 <- plm(log(v) ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d, data=Table_Gravite94_14, index= c("ij","year"), model = c("pooling"),na.action= na.omit)
 
 #glm poisson
-RegPoiss96 <- glm(v ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d, data=Table_Gravite96_06, na.action = na.omit, family = quasipoisson(link="log"))
+RegPoiss96 <- glm(v ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d, data=Table_Gravite94_14, na.action = na.omit, family = quasipoisson(link="log"))
 #effet fixe annee
-RegPoiss96bis <- glm(v ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d+factor(year)-1, data=Table_Gravite96_06, na.action = na.omit, family = quasipoisson(link="log"))
+RegPoiss96bis <- glm(v ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpcap_d)+contig+comcur+commlang+gatt_o+gatt_d+factor(year)-1, data=Table_Gravite94_14, na.action = na.omit, family = quasipoisson(link="log"))
 
 ```
 
@@ -504,11 +545,6 @@ RegPoiss96bis <- glm(v ~ log(gdp_o)+log(gdp_d)+log(distw)+log(gdpcap_o)+log(gdpc
 
 
 ### 5.3 Premiers résultats obtenus
-Sur l'ensemble des données 
-```{r results="asis", echo=FALSE, tidy=TRUE}
-stargazer(RegPanelTime, RegPanelCountry, RegPanel_pool ,RegMCO, RegPoiss,column.labels = c("Panel Temps","Panel Pays","Panel Pooled", "MCO", "QuasiPoisson") ,type = "html")
-```
-
 Sur 20 ans
 ```{r results="asis", echo=FALSE, tidy=TRUE}
 stargazer(RegPanelTime96bis, RegPanelCountry96, RegPanel_pool96 ,RegMCO96, RegPoiss96bis,column.labels = c("Panel Temps","Panel Pays","Panel Pooled", "MCO", "QuasiPoissontemps") ,type = "html")
@@ -516,7 +552,8 @@ stargazer(RegPanelTime96bis, RegPanelCountry96, RegPanel_pool96 ,RegMCO96, RegPo
 
 ### Pour obtenir des standards erreurs robustes
 ```{r}
-#utile pour l'estimation de poisson
+#utile pour l'estimation de poisson, il va falloir les intégrer à stargazer
+
 library("lmtest") 
 library("sandwich") 
 
