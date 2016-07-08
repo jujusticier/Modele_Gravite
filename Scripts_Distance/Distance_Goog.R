@@ -40,7 +40,7 @@ rm(Ville_europe,Ville_monde)
 # les donnees sont déja en bon format
 
 x <-list()
-for(i in 1001:2499){
+for(i in 2500:5999){
   from<- c(TableVille_Europe$From[i])
   to <- c(TableVille_Europe$To[i])
   x[[i]]<-mapdist(from,to,output = c("simple"),mode = c("driving"), messaging= FALSE)
@@ -53,9 +53,9 @@ Tabledistance <- merge(x=Tabledistance,y=Table_Ville.Pays, by.x="to",by.y="Ville
 Tabledistance <- rename(Tabledistance, Country.to = Ville_europe.country.etc)
 Tabledistance <- merge(x=Tabledistance,y=Table_Ville.Pays, by.x="from",by.y="Ville_europe.name",all = FALSE)
 Tabledistance <- rename(Tabledistance, Country.from = Ville_europe.country.etc)
-
+Tabledistance <- distinct(Tabledistance)
 #écrire un nouveau CSV par jour
-write.csv(Tabledistance,file=paste0(getwd(),"/Dist2.csv"))
+write.csv(Tabledistance,file=paste0(getwd(),"/Dist3.csv"))
 
 
 
@@ -63,4 +63,3 @@ write.csv(Tabledistance,file=paste0(getwd(),"/Dist2.csv"))
 
 #on nettoie l'espace de travail
 #ensuite il faudra moyenner par couple de pays et sortir avec une table de couple pays distance
-#AhGCyLgs4kFp3JlLL2koinDWMHdQI1xNRLTVDGatqoxBFkqN8CuJ0S_5UeYo7Ur8
