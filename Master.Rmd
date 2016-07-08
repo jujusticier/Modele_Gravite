@@ -11,7 +11,7 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-# TO DO LIST
+#  TO DO LIST
 - Harmoniser et finaliser la liste de variable à intégrer dans les modèles
 - Ajouter indicatrice EU et Schengen
 - Finir de mettre à jour la base de donnes
@@ -128,9 +128,9 @@ library(data.table)
 library(plotly)
 
 ##### trouver pour chaque pays européen le mix mode de transport par partenaire
-mod_transport <- read.csv(file = paste0(getwd(),"/data/MixTranspMode.csv"),sep = ",", dec = ".")
+mod_transport <- read.csv(file = paste0(getwd(),"/Data/MixTranspMode.csv"),sep = ",", dec = ".")
 
-europe <- read.csv(file = paste0(getwd(),"/data/EuropeanCountries.csv"),sep = ";", dec = ",", header = FALSE)
+europe <- read.csv(file = paste0(getwd(),"/Data/EuropeanCountries.csv"),sep = ";", dec = ",", header = FALSE)
 
 testmerge <- merge(x=mod_transport, y=europe, by.x=c("PARTNER_LAB"), by.y=c("V1"), all= FALSE)
 MTeurope <- filter(testmerge, V2 == 1)
@@ -151,7 +151,7 @@ library(data.table)
 ## Après récupération des données avec le script Goog on peut fusionner les fichiers et obtenir la liste des distances routières
 
 ## on crée une liste avec le chemin du fichier
-dist <- list.files(paste0(getwd(),"/data/DistanceRout"), full.names = TRUE)
+dist <- list.files(paste0(getwd(),"/Data/DistanceRout"), full.names = TRUE)
 
 ## on utilise lapply pour lire à la suite et eviter de faire une boucle
 Distance.complete <- lapply(dist, fread)
@@ -160,7 +160,7 @@ Distance.complete <- lapply(dist, fread)
 Distance.complete <- rbindlist(Distance.complete)
 
 ##on va chercher une table de correspondance (compte tenu des data du package maps)
-iso_europe <- fread(input= paste0(getwd(),"/data/ISOeurope.csv"))
+iso_europe <- fread(input= paste0(getwd(),"/Data/ISOeurope.csv"))
 
 ## on ajoute les ISO3
 Distance.complete <- merge(x=Distance.complete,y = select(iso_europe,2:3), by.x = "Country.to", by.y = "x", all.x = TRUE,suffixes = ".to")
@@ -282,7 +282,7 @@ memory.limit(20000)
 Le fichier CSV issu du traitement suivant est disponible sur GitHub 
 ```{r, message=FALSE, warning=FALSE, tidy=TRUE}
 ##on charge les donnees trade directement en data.table
-Donnees_Commerce<- fread(input=paste0(getwd(),"/data/Chelem.csv"),data.table= TRUE, verbose = FALSE, stringsAsFactors = TRUE )
+Donnees_Commerce<- fread(input=paste0(getwd(),"/Data/Chelem.csv"),data.table= TRUE, verbose = FALSE, stringsAsFactors = TRUE )
 
 ##Renomer la variable t pour la transformer en year
 Donnees_Commerce <- rename(Donnees_Commerce, year=t)
@@ -294,7 +294,7 @@ Donnees_Commerce <- filter(Donnees_Commerce, k == "TT")
 
 ```{r,message=FALSE, warning=FALSE, tidy=TRUE}
 ##on charge les donnees gravité directement en data.table
-Donnees_Gravite <- fread(input=paste0(getwd(),"/data/gravdata_cepii.csv"),data.table= TRUE,verbose = FALSE)
+Donnees_Gravite <- fread(input=paste0(getwd(),"/Data/gravdata_cepii.csv"),data.table= TRUE,verbose = FALSE)
 
 ## Reduit les donnees de gravité é 1967, car nous n'avons pas de données commerce avant cette date
 Donnees_Gravite <- filter(Donnees_Gravite, year > 1966)
@@ -371,11 +371,11 @@ Mise à jour des données avec GDP et PIB
 ```{r, tidy=TRUE}
 library(dplyr)
 ##### Donnees PIB et Population du WDI
-PIB07 <- read.csv(file = paste0(getwd(),"/PIB.csv"))
+PIB07 <- read.csv(file = paste0(getwd(),"/Data/PIB.csv"))
 PIB07 <- rename(PIB07, i = Alpha.3.code,year = Datacomplete.date)
 PIB07$iy <- paste(PIB07$i,PIB07$year)
 
-POP07 <-read.csv(file = paste0(getwd(),"/POP.csv"))
+POP07 <-read.csv(file = paste0(getwd(),"/Data/POP.csv"))
 POP07 <- rename(POP07, i = Alpha.3.code,year = Datacomplete.date)
 POP07$iy <- paste(POP07$i,POP07$year)
 
@@ -742,4 +742,5 @@ Table_Gravite$ij<- as.factor(Table_Gravite$ij)
 Table_GraviteFF <- as.ffdf(Table_Gravite)
 
 ```
+
 
