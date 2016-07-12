@@ -148,6 +148,7 @@ Pour calculer la distance logistique on utilise le code suivant :
 ```{r warning=FALSE , message=FALSE}
 library(dplyr)
 library(data.table)
+library(bit64)
 
 ## Après récupération des données avec le script Goog on peut fusionner les fichiers et obtenir la liste des distances routières
 
@@ -176,7 +177,7 @@ Distance.complete<- rename(Distance.complete, i = ISO3.from, j= ISO3NA)
 Distance_Moyenne <- aggregate(select(Distance.complete,7,11), by=list(Distance.complete$i,Distance.complete$j), FUN = mean, na.rm=TRUE) #exemple d'utilisation d'aggregate
 
 #on ajoute un IJ pour la fusion plus tard
-Distance_Moyenne$ij <- paste0(Distance_Moyenne$Group.1,Distance_Moyenne$Group.2)
+Distance_Moyenne$ij <- paste(Distance_Moyenne$Group.1,Distance_Moyenne$Group.2)
 
 #on clean l'espace
 rm(dist, iso_europe,Distance.complete)
@@ -184,7 +185,42 @@ rm(dist, iso_europe,Distance.complete)
 
 
 
-#################### On utilise la base de donnees de Fouquin et Hugo
+#################### On utilise la base de donnees de Fouquin et Hugo pour extraire les distances maritimes par couple de pays
+
+Donnees_long<- haven::read_dta(path = paste0(getwd(),"/TRADHIST_WP.dta"))
+Dist_Sea <- select(Donnees_long,1,2,35)
+Dist_Sea <- distinct(Dist_Sea)
+Dist_Sea$ij <- paste(Dist_Sea$iso_o,Dist_Sea$iso_d)
+Distance_Moyenne <- merge(Distance_Moyenne,select(Dist_Sea,3,4), by = "ij", all.x = TRUE)
+
+############################# reextraire les données!
+
+Modal_Mix <- read.csv2(file = paste0(getwd(),"/Data/RatioDistRout.csv"))
+pass_iso <- read.csv2(file = paste0(getwd(),"/Data/PassIso.csv"))
+Modal_Mix <- merge(Modal_Mix,pass_iso,by.x = "REPORTER",by.y = "Alpha.2.code", all.x=TRUE)
+Modal_Mix <- merge(Modal_Mix,pass_iso,by.x = "PARTNER",by.y = "Alpha.2.code")
+Modal_Mix$ij  <- as.factor(paste(Modal_Mix$Alpha.3.code.x,Modal_Mix$Alpha.3.code.y))
+Modal_MixSum <- aggregate(VALUE_IN_EUROS ~ ij,data = Modal_Mix,sum)
+Modal_Mix<- merge(Modal_Mix, Modal_MixSum, by="ij", all.x = TRUE)
+
+Modal_Mix$Ratio<- Modal_Mix$VALUE_IN_EUROS.x/Modal_Mix$VALUE_IN_EUROS.y
+
+Ponderateur_Route<- filter(Modal_Mix,TRANSPORT_MODE.INDICATORS == "Route")
+Ponderateur_Route <- select(Ponderateur_Route,1,9)
+Ponderateur_Mer <-filter(Modal_Mix,TRANSPORT_MODE.INDICATORS == "Mer")
+Ponderateur_Mer <- select(Ponderateur_Mer,1,9)
+
+Distance_Moyenne<-merge(Distance_Moyenne,Ponderateur_Route,by = "ij",all.x = TRUE)
+Distance_Moyenne<-merge(Distance_Moyenne,Ponderateur_Mer,by = "ij",all.x = TRUE)
+
+Distance_Moyenne$DistPond <-ifelse(is.na((Distance_Moyenne$km*Distance_Moyenne$Ratio.x)+(Distance_Moyenne$SeaDist*Distance_Moyenne$Ratio.y)), Distance_Moyenne$km,(Distance_Moyenne$km*Distance_Moyenne$Ratio.x)+(Distance_Moyenne$SeaDist*Distance_Moyenne$Ratio.y))
+
+#### cleanons l'espace de travail
+rm(Modal_MixSum, Modal_Mix,pass_iso)
+
+#### reste à intégrer la distance pondérée et à réessayer
+
+
 
 ```
 
@@ -445,7 +481,7 @@ Table_Gravite <- merge(x=Table_Gravite,y=select(Donnees_Commerce,7,8), by= c("CP
 ```{r eval=FALSE, include=FALSE}
 # Tout d'abord passons la base en .csv et selectionnons les variables qui nous interessent
 ##################### a faire
-Donnees_long<- haven::read_dta(path = paste0(getwd(),"/TRADHIST_WP.dta"))
+
 Donnees_long$CPA <- paste(Donnees_long$iso_o,Donnees_long$iso_d, Donnees_long$year)
 
 Table_Gravite <- merge(Table_Gravite,select(Donnees_long,61,27), by="CPA",all.x = TRUE)
@@ -559,7 +595,7 @@ coeftest(M1_RegPoiss_20, vcov = sandwich)
 
 ```{r, tidy=TRUE,eval=FALSE, include=FALSE}
 
-library(dplyr)
+library(dplyr) 
 library(data.table)
 
 #prenons les deux estimations préferées
