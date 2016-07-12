@@ -12,14 +12,14 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 # TO DO LIST
-[] Harmoniser et finaliser la liste de variable à intégrer dans les modèles
-[] Ajouter indicatrice EU et Schengen
-[] Finir de mettre à jour la base de donnes
-[] verifier les unités des variables
-[] Voir colonne 18 bizarre
-[]  Mettre à jour le script google
-[] Refaire code sur mode de transport pour avoir du bilateral !
-[] Que se passe t il avec le GATT ?!
+ [ ]  Harmoniser et finaliser la liste de variable à intégrer dans les modèles
+ [ ]  Ajouter indicatrice EU et Schengen
+ [ ]  Finir de mettre à jour la base de donnes
+ [ ]  verifier les unités des variables
+ [ ]  Voir colonne 18 bizarre
+ [ ]   Mettre à jour le script google
+ [ ]  Refaire code sur mode de transport pour avoir du bilateral !
+ [ ]  Que se passe t il avec le GATT ?!
 
 
 # Introduction
