@@ -61,5 +61,12 @@ write.csv(Tabledistance,file=paste0(getwd(),"/Dist8.csv"))
 
 ####boucle pour lire les csv#####
 
-#on nettoie l'espace de travail
-#ensuite il faudra moyenner par couple de pays et sortir avec une table de couple pays distance
+
+###### il va falloir récupérer Naples (ifesle Napoli) et Birmingham
+
+TableNapoli <- filter(TableVille_Europe, From== "Naples"|To =="Naples")
+TableNapoli$From <- ifelse(TableNapoli$From == "Naples", "Napoli",TableNapoli$From)
+TableNapoli$To <- ifelse(TableNapoli$To == "Naples", "Napoli",TableNapoli$To)
+
+
+TableBirmingham
