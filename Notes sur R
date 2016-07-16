@@ -1,0 +1,28 @@
+Pour voir les dix premiers éléments d'un vecteur on prend : x[1:10]
+
+Pour afficher les NA dans un vecteur on peut utliser x[is.na(x)]
+
+Pour afficher les éléments positifs d'un vecteur y[y > 0] on ne peut le faire que s'il n'y a plus de NA dans la liste
+
+Pour combiner les conditions on utlise & : x[!is.na(x) & x > 0]
+
+Pour trouver uniquement les éléments précis d'un vecteur on peut utiliser le concatanate ca donne :  x[c(3,5,7)]
+
+Pour avoir tous les élément sauf quelques un on utilise x[c(-2, -10)] ou x[-c(2, 10)]
+
+Pour trouver les noms attribués à des éléments du vecteur on utilise names(vect)
+
+Args() permet de voir les arguments d'une fonction
+
+La fonction head() permet de voir les premieres lignes d'un dataframe
+La fonction dim() permet de voir les dimensions d'un dataframe
+
+
+Pour extraire les colonnes d'un tableau dans un élements distinct il faut tableau[,2:34]#pour extraire les colonnes de 2 à 34
+
+lapply applique la fonction donnée à chaque élement d'une liste/vecteur/dataframe
+lapply retourne toujours une liste
+
+unique() permet de retirer les doublons d'un vecteur
+
+Pour ajouter une dummy il suffit d'utiliser if else mydata$time (crée unenouvelle colonne) = ifelse(mydata$year >= 1994, 1, 0)
