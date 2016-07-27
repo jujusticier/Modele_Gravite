@@ -11,15 +11,16 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-# TO DO LIST
-- [ ]  Harmoniser et finaliser la liste de variable à intégrer dans les modèles
-- [ ]  Ajouter indicatrice EU et Schengen
-- [ ]  Finir de mettre à jour la base de donnes
-- [ ]  verifier les unités des variables
-- [ ]  Voir colonne 18 bizarre
-- [ ]   Mettre à jour le script google
-- [ ]  Refaire code sur mode de transport pour avoir du bilateral !
-- [ ]  Que se passe t il avec le GATT ?!
+#  TO DO LIST
+- Harmoniser et finaliser la liste de variable à intégrer dans les modèles
+- Ajouter indicatrice EU et Schengen
+- Finir de mettre à jour la base de donnes
+- verifier les unités des variables
+- Voir colonne 18 bizarre
+-  Mettre à jour le script google
+- Refaire code sur mode de transport pour avoir du bilateral !
+- Que se passe t il avec le GATT ?!
+- Détailler le code, notamment pour les données distance
 
 
 # Introduction
@@ -120,35 +121,13 @@ Cette variante a pour objectif de raffiner la variable de distance pour les pays
 
 Dans les prochaines versions il s'agira de prendre en compte les principaux centres logistiques et non les grandes villes et d'élargir la méthodologie au monde. 
 
-Ci dessous la réparatition des échanges dans l'UE par mode de transport
-
-```{r warning=FALSE, message=FALSE, echo=FALSE,eval=FALSE}
-library(dplyr)
-library(ggplot2)
-library(data.table)
-library(plotly)
-
-##### trouver pour chaque pays européen le mix mode de transport par partenaire
-mod_transport <- read.csv(file = paste0(getwd(),"/Data/MixTranspMode.csv"),sep = ",", dec = ".")
-
-europe <- read.csv(file = paste0(getwd(),"/Data/EuropeanCountries.csv"),sep = ";", dec = ",", header = FALSE)
-
-testmerge <- merge(x=mod_transport, y=europe, by.x=c("PARTNER_LAB"), by.y=c("V1"), all= FALSE)
-MTeurope <- filter(testmerge, V2 == 1)
-MTeurope <- data.table(MTeurope)
-MTeurope <- setkey(MTeurope, value=TRANSPORT_MODE_LAB)
-Graph_Transport  <- ggplot(MTeurope, aes(y=INDICATOR_VALUE, x=PERIOD_LAB, fill=TRANSPORT_MODE_LAB)) +geom_bar(stat="identity", position="fill")
-
-ggplotly(Graph_Transport)
-```
-
-
 Pour calculer la distance logistique on utilise le code suivant : 
 
 ```{r warning=FALSE , message=FALSE}
 library(dplyr)
 library(data.table)
 library(bit64)
+library(haven)
 
 ## Après récupération des données avec le script Goog on peut fusionner les fichiers et obtenir la liste des distances routières
 
@@ -164,12 +143,11 @@ Distance.complete <- rbindlist(Distance.complete)
 ##on va chercher une table de correspondance (compte tenu des data du package maps)
 iso_europe <- fread(input= paste0(getwd(),"/Data/ISOeurope.csv"))
 
-## on ajoute les ISO3
+## on ajoute les ISO3 pour les origines et les destination
 Distance.complete <- merge(x=Distance.complete,y = select(iso_europe,2:3), by.x = "Country.to", by.y = "x", all.x = TRUE,suffixes = ".to")
-
 Distance.complete <- merge(x=Distance.complete,y = select(iso_europe,2:3), by.x = "Country.from", by.y = "x", all.x = TRUE,suffixes = ".from")
 
-## on clean un peu 
+## Renommer les variables i et j pour faciliter le merge à venir
 Distance.complete<- rename(Distance.complete, i = ISO3.from, j= ISO3NA)
 
 #on moyenne par couple de pays : miracle on trouve 28² couples!! nb à ce stade on a pas encore résolu le problème de Napple
@@ -182,27 +160,39 @@ Distance_Moyenne$ij <- paste(Distance_Moyenne$Group.1,Distance_Moyenne$Group.2)
 #on clean l'espace
 rm(dist, iso_europe,Distance.complete)
 
-
-
-
 #################### On utilise la base de donnees de Fouquin et Hugo pour extraire les distances maritimes par couple de pays
 
-Donnees_long<- haven::read_dta(path = paste0(getwd(),"/TRADHIST_WP.dta"))
+#lis les données grace à haven
+Donnees_long<- read_dta(path = paste0(getwd(),"/TRADHIST_WP.dta"))
+#selectionne la colonne distance maritime
 Dist_Sea <- select(Donnees_long,1,2,35)
+
+#on enlève les doublons
 Dist_Sea <- distinct(Dist_Sea)
+
 Dist_Sea$ij <- paste(Dist_Sea$iso_o,Dist_Sea$iso_d)
+
+#on ajoute aux distances routieres les distances maritime par couple de pays
 Distance_Moyenne <- merge(Distance_Moyenne,select(Dist_Sea,3,4), by = "ij", all.x = TRUE)
 
-############################# reextraire les données!
-
+############################# reextraire les données! [vraiment ?]
+# on lit les données récupérées dans eurostat
 Modal_Mix <- read.csv2(file = paste0(getwd(),"/Data/RatioDistRout.csv"))
 pass_iso <- read.csv2(file = paste0(getwd(),"/Data/PassIso.csv"))
+
+#on ajoute le nom des pays en iso3
 Modal_Mix <- merge(Modal_Mix,pass_iso,by.x = "REPORTER",by.y = "Alpha.2.code", all.x=TRUE)
 Modal_Mix <- merge(Modal_Mix,pass_iso,by.x = "PARTNER",by.y = "Alpha.2.code")
+
+#on crée la variable couple pays
 Modal_Mix$ij  <- as.factor(paste(Modal_Mix$Alpha.3.code.x,Modal_Mix$Alpha.3.code.y))
+
+#on prend la somme des exports par route et mer comme total des exports (proxy)
 Modal_MixSum <- aggregate(VALUE_IN_EUROS ~ ij,data = Modal_Mix,sum)
+#on fusionne cette somme avec la table de mix
 Modal_Mix<- merge(Modal_Mix, Modal_MixSum, by="ij", all.x = TRUE)
 
+# On obtient un ratio pour chaque mode de transport par couple pays
 Modal_Mix$Ratio<- Modal_Mix$VALUE_IN_EUROS.x/Modal_Mix$VALUE_IN_EUROS.y
 
 Ponderateur_Route<- filter(Modal_Mix,TRANSPORT_MODE.INDICATORS == "Route")
@@ -212,23 +202,19 @@ Ponderateur_Mer <- select(Ponderateur_Mer,1,9)
 
 Distance_Moyenne<-merge(Distance_Moyenne,Ponderateur_Route,by = "ij",all.x = TRUE)
 Distance_Moyenne<-merge(Distance_Moyenne,Ponderateur_Mer,by = "ij",all.x = TRUE)
-
+#on multiplie la distance par le taux et on aditionne
 Distance_Moyenne$DistPond <-ifelse(is.na((Distance_Moyenne$km*Distance_Moyenne$Ratio.x)+(Distance_Moyenne$SeaDist*Distance_Moyenne$Ratio.y)), Distance_Moyenne$km,(Distance_Moyenne$km*Distance_Moyenne$Ratio.x)+(Distance_Moyenne$SeaDist*Distance_Moyenne$Ratio.y))
 
 #### cleanons l'espace de travail
 rm(Modal_MixSum, Modal_Mix,pass_iso)
 
-#### reste à intégrer la distance pondérée et à réessayer
+#### Les données distance pondérées se trouvent dans la derniere colonne de Distance_Moyenne
 
-
+### Graphique : différence entre distance pondérées et distancew de la base initiale
 
 ```
 
 
-
-
-#### 3.1.3.2 Distance logistique 
-On peut appliquer la méthode ci dessus à l'ensemble des pays. 
 
 #### 3.1.3.3 Pondération de la distance : Remoteness 
 Il faut introduire une variable de distance relative (Deardoff 1998, Baldwin et Taglioni 2006) sur le modelé de Wei 1996, on appellera cette variable REMOT pour remotness (typiquement l'australie et la Nouvelle-Zélande commerce plus en entre eux car sont isolés). On choisit cette option car elle semble compatible é la fois avec les distances routiéres et les distance géodésiques: 
@@ -241,17 +227,17 @@ L'indicatrice de frontière commune (Contig) permet d'identifier les pays ayant 
 On attend un signe positif.
 
 ### 3.1.5 Origine légale commune
-L'indicatrice d'origine légale commune provient d'Andrei Shleifer (http://post.economics.harvard.edu/faculty/shleifer/Data/qgov_web.xls). Elle approche les couts de transaction. Le signe attendu est positif
+L'indicatrice d'origine légale commune provient d'Andrei Shleifer (http://post.economics.harvard.edu/faculty/shleifer/Data/qgov_web.xls). Cette variable a pour objtectif d'approcher les coûts de transaction dus à la distance juridique entre les pays. Le présupposé étant que des pays juridiquement proche commerceront plus facilement. Le signe attendu est positif
 
 ### 3.1.6 Accord commercial régional 
-L'indicatrice d'accord de libre échange (RTA) provient de la base de donnees gravité CEPII. Le signe attendu est positif
+L'indicatrice d'accord de libre échange (RTA) provient de la base de donnees gravité CEPII. Le signe attendu est positif.
 
 ### 3.1.7 Appartenance à l'Union Européenne.
 
 [selon les résultats cette dummy pourra etre écartée au profit de RTA]
 
 
-## 3.2 Autres variables indicatrices à intégrer
+## 3.2 Autres variables pouvant être intégrées afin de juger de leur effet sur le commerce
 
 ### 3.2.1 Appartenance à l'espace Schengen
 L'indicatrice Schengen permet d'apprcier l'effet de l'espace Schengen sur les échanges entre pays européens. 
@@ -273,12 +259,13 @@ L'idée sous-jacente est de lier les échanges commerciaux aux réseaux personne
 
 ### 3.2.7 Barrières tarifaires et non tarifaires
 Il s'agira de tester l'impact des barrières non tarifaires. On pourrait également ajouter une variable numérique avec le taux de droit de douane bilatéral moyen. 
-#### Enclavement
+
+#### 3.2.8 Enclavement
 La variable d'enclavement indique si le pays exportateur a une frontiére maritime ou non. Cette variable a pour objet de raffiner la distance comme proxy des couts de transport.  Compte tenu de l'importance du commerce international par voie maritime on suppose que l'enclavement a pour effet une augmentation des couts de transports. 
 Source ?
 On a attend donc un coefficient négatif. 
 
-#### Colonies
+#### 3.2.9 Colonies
 Malgré la qualité du travail de Head sur le sujet, nous ne reprenons pas ici les indicatrices sur les colonies
 
 
@@ -287,8 +274,8 @@ L'objectif du modéle est de sélectionner des variables afin d'obtenir un modé
 
 | Variable  | Description   |
 |---|---|
-|   |   |
-|   |   |
+| Distance  |   |
+| Produit intérieur brut  |   |
 |   |   |
 |   |   |
 |   |   |
@@ -303,6 +290,7 @@ L'objectif du modéle est de sélectionner des variables afin d'obtenir un modé
 |   |   |
 
 #4. Gestion des données
+Dans l'optique de permettre la reproductibilité des analyses, nous partageons les codes et les bases de données utilisées dans ce document de travail. 
 
 Dans un premier temps nous traiterons les données gravite du CEPII et commerce de la base Chelem (CEPII). Nous utiliserons principalement ces données pour le modèle n°1 et nous modifierons certaines d'entre-elles pour le modèle n°2.
 
@@ -312,6 +300,7 @@ library(data.table)
 library(dplyr)
 library(plm)
 library(stargazer)
+library(bit64)
 memory.limit(20000)
 ```
 
